@@ -27,6 +27,7 @@ const paymentRouter = require("./routes/paymentRoutes");
 const roomRouter = require("./routes/roomsRouter");
 const userRouter = require("./routes/userRouter");
 const autRouteruser = require("./routes/authRouteruser");
+const authRouteragent = require("./routes/authRouteragent")
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -45,7 +46,6 @@ app.use("/admin", adminRouter);
 
 // User routes
 app.use("/auth/user",autRouteruser)
-app.use("/agents", agentRouter);
 app.use("/availabilities", availabilityRouter);
 app.use("/bookings", bookingdetailsRouter);
 app.use("/enquiries", enquiryRouter);
@@ -53,6 +53,11 @@ app.use("/packages", packageRouter);
 app.use("/payments", paymentRouter);
 app.use("/rooms", roomRouter);
 app.use("/users", userRouter);
+
+//agent routes
+app.use("/agents", agentRouter);
+app.use("/auth/agent", authRouteragent);
+
 
 // 404 Handler
 app.use((req, res, next) => {

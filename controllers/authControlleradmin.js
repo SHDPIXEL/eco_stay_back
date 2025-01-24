@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin'); // Import the Admin model
+const Admin = require('../models/admin'); // Import the Admin model
 
 async function login(req, res) {
     try {
