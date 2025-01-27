@@ -16,10 +16,28 @@ const createBooking = async (req, res) => {
       selected_packages,
       selected_occupancy,
       amount,
-      status,
-      paymentStatus,
+      status = "pending", // Default value
+      paymentStatus = "pending", // Default value
+      idProof, // New field
+      address, // New field
+      city, // New field
+      state, // New field
+      country, // New field
+      pincode, // New field
     } = req.body;
 
+    // Validate idProof based on login type
+    if (agentId && !idProof) {
+      return res
+        .status(400)
+        .json({ error: "idProof is required for agent bookings." });
+    }
+
+    if (user_Id && idProof === null) {
+      console.log("User login detected. idProof is optional.");
+    }
+
+    // Create a new booking record in the database
     const booking = await BookingDetails.create({
       user_Id,
       agentId,
@@ -34,10 +52,18 @@ const createBooking = async (req, res) => {
       amount,
       status,
       paymentStatus,
+      idProof,
+      address,
+      city,
+      state,
+      country,
+      pincode,
     });
 
+    // Respond with a success message and the created booking
     res.status(201).json({ message: "Booking created successfully", booking });
   } catch (error) {
+    // Handle errors and respond with the error message
     res.status(400).json({ error: error.message });
   }
 };

@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const upload = require("../middleware/uploadmiddleware");
 const fs = require("fs");
 const path = require("path");
 

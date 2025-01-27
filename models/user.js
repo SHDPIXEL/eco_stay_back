@@ -63,7 +63,7 @@ const User = sequelize.define(
     },
     idProof: {
       type: DataTypes.JSON,
-      allowNull: false,
+      allowNull: true,
       field: "id_proof", // Maps the column name in the database
     },
     address: {

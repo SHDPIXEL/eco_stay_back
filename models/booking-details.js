@@ -1,16 +1,16 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../connection"); // Adjust the path as needed
 const Agent = require("./agent"); // Assuming the Agent model is in models/agent.js
-const User = require('./user')
+const User = require('./user');
 
 const generateUniqueId = () => {
   const getRandomSegment = () => {
-      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=<>?[]{}|';
-      let result = '';
-      for (let i = 0; i < 4; i++) {
-          result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;  
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=<>?[]{}|';
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;  
   };
 
   return `${getRandomSegment()}-${getRandomSegment()}-${getRandomSegment()}`;
@@ -34,7 +34,7 @@ const BookingDetails = sequelize.define(
         isValidUId(value) {
           console.log("Validating u_id:", value); // Debugging
           const regex =
-            /^[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}$/;
+            /^[a-z0-9A-Z]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}$/;
           if (!regex.test(value)) {
             throw new Error(
               'u_id must be a 12-character string with alphanumeric characters and symbols (e.g., "ABCD1234!@#").'
@@ -43,7 +43,7 @@ const BookingDetails = sequelize.define(
         },
       },
     },
-    user_Id:{
+    user_Id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
@@ -70,13 +70,12 @@ const BookingDetails = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        // You can add a custom validation to ensure it's a valid phone number format if necessary.
         is: {
           args: /^[0-9]{10}$/, // Example: Ensures the phone number is exactly 10 digits long
           msg: 'Phone number must be a valid 10-digit number.',
         },
       },
-    },    
+    },
     checkInDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -89,15 +88,15 @@ const BookingDetails = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    number_of_cottages:{
+    number_of_cottages: {
       type: DataTypes.FLOAT,
       allowNull: false,
     },
-    selected_packages:{
+    selected_packages: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    selected_occupancy:{
+    selected_occupancy: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -118,6 +117,32 @@ const BookingDetails = sequelize.define(
       type: DataTypes.ENUM("paid", "pending"),
       allowNull: false,
       defaultValue: "pending",
+    },
+    // New parameters
+    idProof: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      field: "id_proof", // Maps the column name in the database
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    city: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    state: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    country: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    pincode: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   {

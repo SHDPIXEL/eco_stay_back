@@ -25,7 +25,7 @@ const createAgent = async (req, res) => {
       }
 
       // Destructure required fields from req.body
-      const { name, email, phone, address, status, offers, password } =
+      const { name, email, phone, address,city, state, country,pincode, status, offers, password } =
         req.body;
 
       // Ensure all required fields are provided
@@ -34,6 +34,10 @@ const createAgent = async (req, res) => {
         !email ||
         !phone ||
         !address ||
+        !city ||
+        !state ||
+        !country ||
+        !pincode ||
         !status ||
         !offers ||
         !password
@@ -59,6 +63,10 @@ const createAgent = async (req, res) => {
         email,
         phone,
         address,
+        city,
+        state,
+        country,
+        pincode,
         idProof: JSON.stringify(idProof),
         status,
         offers,
@@ -108,7 +116,7 @@ const updateAgentbyId = async (req, res) => {
       const { id } = req.params;
 
       // Get new data from the request body
-      const { name, email, phone, address, status, offers, password } =
+      const { name, email, phone, address,city,state,country,pincode, status, offers, password } =
         req.body;
 
       // Get the uploaded file for ID proof
@@ -123,6 +131,10 @@ const updateAgentbyId = async (req, res) => {
         agent.email = email || agent.email;
         agent.phone = phone || agent.phone;
         agent.address = address || agent.address;
+        agent.city = city || agent.city;
+        agent.state = state || agent.state;
+        agent.country = country || agent.country;
+        agent.pincode = pincode || agent.pincode;
 
         // Update ID proof only if a new file is uploaded
         if (idProof) {
@@ -415,11 +427,23 @@ const createRoom = async (req, res) => {
 const getAllRooms = async (req, res) => {
   try {
     const rooms = await Rooms.findAll();
-    res.status(200).json(rooms);
+
+    // Ensure `package_ids` and `amenities` are stringified
+    const formattedRooms = rooms.map((room) => {
+      return {
+        ...room.dataValues, // Ensure you're accessing the dataValues from Sequelize
+        package_ids: JSON.stringify(room.package_ids),
+        amenities: JSON.stringify(room.amenities),
+      };
+    });
+
+    console.log(formattedRooms);
+    res.status(200).json(formattedRooms);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Get room by ID
 const getRoomById = async (req, res) => {

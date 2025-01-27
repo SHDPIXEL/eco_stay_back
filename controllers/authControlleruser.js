@@ -1,10 +1,11 @@
 require("dotenv").config();
 const Razorpay = require("razorpay");
-const crypto = require("crypto")
+const crypto = require("crypto");
 const otpGenerator = require("otp-generator");
 const User = require("../models/user");
-const BookingDetails = require("../models/booking-details") // Import the User model
-const PaymentDetails = require("../models/payment-details")
+const Agent = require("../models/agent");
+const BookingDetails = require("../models/booking-details"); // Import the User model
+const PaymentDetails = require("../models/payment-details");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const upload = require("../middleware/uploadmiddleware");
@@ -14,7 +15,9 @@ const otpStore = {};
 const senderIds = ["VIRYAA", "VIRYWT", "VWILDT"];
 
 const generateUniqueId = () => {
-  return `${crypto.randomBytes(4).toString("hex")}-${crypto.randomBytes(4).toString("hex")}-${crypto.randomBytes(4).toString("hex")}`;
+  return `${crypto.randomBytes(4).toString("hex")}-${crypto
+    .randomBytes(4)
+    .toString("hex")}-${crypto.randomBytes(4).toString("hex")}`;
 };
 
 const generateReceiptId = () => {
@@ -115,7 +118,7 @@ async function verifyOtp(req, res) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, phone: user.phone }, // Payload
+      { userId: user.id, phone: user.phone, isAgent: false }, // Payload
       process.env.JWT_SECRET, // Secret
       { expiresIn: "1h" } // Options
     );
@@ -146,19 +149,27 @@ const getuserdetails = async (req, res) => {
         return res.status(401).json({ error: "Invalid or expired token" });
       }
 
-      // Extract user ID (or other parameters) from the decoded token
+      // Extract user ID and isAgent from the decoded token
       const id = decoded.userId;
+      const isAgent = decoded.isAgent;
 
       console.log(decoded);
 
       // Find user details by primary key (assuming id is the user's primary key)
-      const users = await User.findByPk(id);
+      const user = await User.findByPk(id);
 
-      if (!users) {
+      if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      res.status(200).json(users);
+      // Embed `isAgent` field within the user details object
+      const userDetails = {
+        ...user.toJSON(), // Convert Sequelize instance to a plain object
+        isAgent,
+      };
+
+      // Return user details
+      res.status(200).json(userDetails);
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -319,7 +330,9 @@ const order = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1]; // Extract token from Authorization header
     if (!token) {
-      return res.status(401).json({ message: "Authentication token is missing" });
+      return res
+        .status(401)
+        .json({ message: "Authentication token is missing" });
     }
 
     // Verify and decode the token
@@ -330,17 +343,33 @@ const order = async (req, res) => {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    const userId = decoded.userId; // Extract userId from the decoded token
-    if (!userId) {
+    // Check if the token belongs to a user or an agent
+    const userId = decoded.userId;
+    const agentId = decoded.agentId;
+
+    if (!userId && !agentId) {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    let customerName, customerPhone;
 
-    const { name: customerName, phone: customerPhone } = user;
+    if (userId) {
+      // Handle user booking
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      customerName = user.name;
+      customerPhone = user.phone;
+    } else if (agentId) {
+      // Handle agent booking
+      const agent = await Agent.findByPk(agentId);
+      if (!agent) {
+        return res.status(404).json({ message: "Agent not found" });
+      }
+      customerName = agent.name;
+      customerPhone = agent.phone;
+    }
 
     const {
       amt,
@@ -351,7 +380,7 @@ const order = async (req, res) => {
       selected_packages,
       selected_occupancy,
     } = req.body;
-    console.log(req.body)
+
     if (
       !customerName ||
       !customerPhone ||
@@ -362,7 +391,9 @@ const order = async (req, res) => {
       !selected_packages ||
       !selected_occupancy
     ) {
-      return res.status(400).json({ message: "Missing required booking details" });
+      return res
+        .status(400)
+        .json({ message: "Missing required booking details" });
     }
 
     const instance = new Razorpay({
@@ -373,17 +404,18 @@ const order = async (req, res) => {
     const receiptId = generateReceiptId();
 
     const options = {
-      amount: amt*100, // amount in smallest currency unit
+      amount: amt * 100, // amount in smallest currency unit
       currency: "INR",
       receipt: receiptId,
     };
 
     const order = await instance.orders.create(options);
 
-    if (!order) return res.status(500).send("Some error occured");
-    
+    if (!order) return res.status(500).send("Some error occurred");
+
     const newBooking = await BookingDetails.create({
-      user_Id: userId,
+      user_Id: userId || null, // Null if agent is booking
+      agent_Id: agentId || null, // Null if user is booking
       customerName,
       customerPhone,
       checkInDate,
@@ -403,10 +435,11 @@ const order = async (req, res) => {
       bookingDetails: newBooking,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).send(error);
   }
 };
+
 
 const orderSuccess = async (req, res) => {
   try {
@@ -449,7 +482,7 @@ const orderSuccess = async (req, res) => {
       bookingId: bookingData.id, // Foreign key to the BookingDetails table
       orderId: razorpayOrderId,
       transactionId: razorpayPaymentId,
-      amount: (amount/100),
+      amount: amount / 100,
       status: "success", // Payment status after successful verification
       paymentDate: new Date(),
       remarks: "Payment verified successfully",
@@ -461,7 +494,8 @@ const orderSuccess = async (req, res) => {
       orderId: razorpayOrderId,
       paymentId: razorpayPaymentId,
       bookingId: bookingData.booking_id,
-      paymentDetails: newPayment, // Return payment details in the response
+      paymentDetails: newPayment,
+      status:true // Return payment details in the response
     });
   } catch (error) {
     console.error("Error verifying payment:", error);
