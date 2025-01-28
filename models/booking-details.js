@@ -5,7 +5,7 @@ const User = require('./user');
 
 const generateUniqueId = () => {
   const getRandomSegment = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=<>?[]{}|';
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     let result = '';
     for (let i = 0; i < 4; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -34,7 +34,7 @@ const BookingDetails = sequelize.define(
         isValidUId(value) {
           console.log("Validating u_id:", value); // Debugging
           const regex =
-            /^[a-z0-9A-Z]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}-[a-z0-9!@#$%^&*()_+\-=\[\]{}|;:'",.<>?]{4}$/;
+            /^[a-z0-9A-Z]{4}-[a-z0-9A-Z]{4}-[a-z0-9A-Z]{4}$/;
           if (!regex.test(value)) {
             throw new Error(
               'u_id must be a 12-character string with alphanumeric characters and symbols (e.g., "ABCD1234!@#").'

@@ -196,7 +196,7 @@ const loginOrRegisterUser = async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // If OTP is not provided, generate and send OTP
+    // Handle OTP generation and sending
     if (!otp) {
       const generatedOtp = otpGenerator.generate(6, {
         lowerCaseAlphabets: false,
@@ -204,127 +204,142 @@ const loginOrRegisterUser = async (req, res) => {
         specialChars: false,
       });
 
-      // Save OTP in memory or a cache (like Redis)
       otpStore[phoneNumber] = generatedOtp;
 
-      // Randomly select a senderId from the list
       const senderId = senderIds[Math.floor(Math.random() * senderIds.length)];
-      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp} use this Code to validate your verification, Regards, Virya Wildlife Tours`;
+      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp}. Use this code to validate your verification. Regards, Virya Wildlife Tours`;
 
-      const apiUrl =
-        process.env.OTP_BASE_SEND +
-        `?username=viryawildlifetours&password=viryawildlifetours&senderid=${senderId}&message=${encodeURIComponent(
-          message
-        )}&numbers=${phoneNumber}`;
+      const apiUrl = `${process.env.OTP_BASE_SEND}?username=viryawildlifetours&password=viryawildlifetours&senderid=${senderId}&message=${encodeURIComponent(
+        message
+      )}&numbers=${phoneNumber}`;
 
-      const response = await axios.get(apiUrl);
-      if (response.status === 200) {
-        console.log(`OTP ${generatedOtp} sent to ${phoneNumber}`);
-        return res.status(200).json({ message: "OTP sent successfully" });
-      } else {
-        console.error("Error sending OTP:", response.data);
-        throw new Error("Failed to send OTP");
+      try {
+        const response = await axios.get(apiUrl);
+        if (response.status === 200) {
+          console.log(`OTP ${generatedOtp} sent to ${phoneNumber}`);
+          return res.status(200).json({ message: "OTP sent successfully" });
+        } else {
+          throw new Error("Failed to send OTP");
+        }
+      } catch (error) {
+        console.error("Error sending OTP:", error.message);
+        return res.status(500).json({ message: "Failed to send OTP" });
       }
     }
 
-    // If OTP is provided, verify it
+    // Validate OTP
     const storedOtp = otpStore[phoneNumber];
     if (!storedOtp || storedOtp !== otp) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // OTP is valid, check if the user exists
+    // Process file upload asynchronously
+    const processFileUpload = () =>
+      new Promise((resolve, reject) => {
+        upload.single("idProof")(req, res, (err) => {
+          if (err) {
+            reject(new Error(err.message));
+          } else {
+            resolve(req.file ? req.file.filename : null);
+          }
+        });
+      });
+
+    const idProof = await processFileUpload().catch((err) => {
+      console.error("File upload error:", err.message);
+      return res.status(400).json({ error: err.message });
+    });
+
+    if (res.headersSent) return; // Ensure no further processing if an error response is already sent
+
+    // Check if the user exists
     let user = await User.findOne({ where: { phone: phoneNumber } });
 
     if (!user) {
-      // User doesn't exist, create a new user
-      console.log(req.body);
-      // Ensure necessary fields are provided for registration
+      // Register a new user
       if (
         !firstname ||
+        !lastname ||
         !email ||
         !address ||
         !city ||
         !state ||
         !country ||
-        !pincode ||
-        !lastname
+        !pincode
       ) {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      // Check if the user already exists by email
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser) {
+      const emailUser = await User.findOne({ where: { email } });
+      if (emailUser) {
         return res
           .status(409)
-          .json({ error: "User already exists with this Email" });
+          .json({ error: "User already exists with this email" });
       }
 
-      // Handle file upload for idProof
-      upload.single("idProof")(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({ error: err.message });
-        }
-
-        // Process uploaded file for ID proof
-        const idProof = req.file ? req.file.filename : null;
-
-        // Create a new user record
-        user = await User.create({
-          name: firstname + " " + lastname,
-          email,
-          phone: phoneNumber,
-          address,
-          city,
-          state,
-          country,
-          pincode,
-          idProof: JSON.stringify(idProof), // Store filename as JSON in the database
-          otp_verified_at: new Date(),
-          status: "Active", // Default to Inactive if no status provided
-        });
-
-        // Generate JWT token
-        const token = jwt.sign(
-          { userId: user.id, phone: user.phone },
-          process.env.JWT_SECRET,
-          { expiresIn: "1h" }
-        );
-
-        // Cleanup OTP
-        delete otpStore[phoneNumber];
-
-        return res.status(201).json({
-          message: "User created successfully",
-          token,
-        });
+      user = await User.create({
+        name: `${firstname} ${lastname}`,
+        email,
+        phone: phoneNumber,
+        address,
+        city,
+        state,
+        country,
+        pincode,
+        idProof: JSON.stringify(idProof),
+        otp_verified_at: new Date(),
+        status: "Active",
       });
-    } else {
-      // User exists, update their status and OTP verification timestamp
-      user.status = "Active";
-      user.otp_verified_at = new Date();
-      await user.save();
 
+      // Cleanup OTP
+      delete otpStore[phoneNumber];
+
+      // Generate token
       const token = jwt.sign(
         { userId: user.id, phone: user.phone },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
 
+      return res.status(201).json({
+        message: "User created successfully",
+        token,
+        user,
+      });
+    } else {
+      // Update existing user
+      user.status = "Active";
+      user.otp_verified_at = new Date();
+
+      if (idProof) {
+        user.idProof = JSON.stringify(idProof);
+      }
+
+      await user.save();
+
       // Cleanup OTP
       delete otpStore[phoneNumber];
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: user.id, phone: user.phone },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
 
       return res.status(200).json({
         message: "Login successful",
         token,
+        user,
       });
     }
   } catch (error) {
-    console.error("Error in login/register:", error);
+    console.error("Error in login/register:", error.message);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 const order = async (req, res) => {
   try {
