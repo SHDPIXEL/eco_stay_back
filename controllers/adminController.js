@@ -25,7 +25,7 @@ const createAgent = async (req, res) => {
       }
 
       // Destructure required fields from req.body
-      const { name, email, phone, address,city, state, country,pincode, status, offers, password } =
+      const { name, email, phone, address, city, state, country, pincode, status, offers, password } =
         req.body;
 
       // Ensure all required fields are provided
@@ -43,6 +43,12 @@ const createAgent = async (req, res) => {
         !password
       ) {
         return res.status(400).json({ error: "All fields are required" });
+      }
+
+      // Validate phone number (must be exactly 10 digits)
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
       }
 
       // Check if the agent already exists
