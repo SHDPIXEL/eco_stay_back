@@ -45,11 +45,11 @@ const createAgent = async (req, res) => {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      // Validate phone number (must be exactly 10 digits)
-      const phoneRegex = /^\d{10}$/;
-      if (!phoneRegex.test(phone)) {
-        return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
-      }
+      // // Validate phone number (must be exactly 10 digits)
+      // const phoneRegex = /^\d{10}$/;
+      // if (!phoneRegex.test(phone)) {
+      //   return res.status(400).json({ error: "Phone number must be exactly 10 digits" });
+      // }
 
       // Check if the agent already exists
       const existingAgent = await Agent.findOne({ where: { email } });
