@@ -367,7 +367,7 @@ const order = async (req, res) => {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    let customerName, customerPhone;
+    let customerName, customerPhone, agent_Id;
 
     const {
       amt,
@@ -402,9 +402,9 @@ const order = async (req, res) => {
       }
       customerName = name;
       customerPhone = phone;
+      agent_Id = agent.id
     }
-
-    console.log(customerName,customerPhone,checkInDate,checkOutDate,roomType,number_of_cottages,selected_packages,selected_occupancy);
+    
     if (
       !customerName ||
       !customerPhone ||
@@ -439,7 +439,7 @@ const order = async (req, res) => {
 
     const newBooking = await BookingDetails.create({
       user_Id: userId || null, // Null if agent is booking
-      agent_Id: agentId || null, // Null if user is booking
+      agent_Id: agent_Id || null, // Null if user is booking
       customerName,
       customerPhone,
       checkInDate,
