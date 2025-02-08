@@ -400,6 +400,8 @@ const order = async (req, res) => {
       if (!agent) {
         return res.status(404).json({ message: "Agent not found" });
       }
+      customerName = name;
+      customerPhone = phone;
     }
 
     if (
