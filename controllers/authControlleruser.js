@@ -368,6 +368,23 @@ const order = async (req, res) => {
 
     let customerName, customerPhone;
 
+    const {
+      amt,
+      checkInDate,
+      checkOutDate,
+      roomType,
+      number_of_cottages,
+      selected_packages,
+      selected_occupancy,
+      name:customerName,
+      phone:customerPhone,
+      city,
+      pincode,
+      state,
+      country,
+      address,
+    } = req.body;
+
     if (userId) {
       // Handle user booking
       const user = await User.findByPk(userId);
@@ -382,19 +399,7 @@ const order = async (req, res) => {
       if (!agent) {
         return res.status(404).json({ message: "Agent not found" });
       }
-      customerName = agent.name;
-      customerPhone = agent.phone;
     }
-
-    const {
-      amt,
-      checkInDate,
-      checkOutDate,
-      roomType,
-      number_of_cottages,
-      selected_packages,
-      selected_occupancy,
-    } = req.body;
 
     if (
       !customerName ||
@@ -440,6 +445,10 @@ const order = async (req, res) => {
       selected_packages,
       selected_occupancy,
       status: "pending",
+      city,
+      state,
+      country,
+      pincode,
       amount: JSON.parse(amt),
       paymentStatus: "pending", // Default to pending
     });
