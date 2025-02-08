@@ -4,8 +4,9 @@ const crypto = require("crypto");
 const otpGenerator = require("otp-generator");
 const User = require("../models/user");
 const Agent = require("../models/agent");
-const BookingDetails = require("../models/booking-details"); // Import the User model
+const BookingDetails = require("../models/booking-details");
 const PaymentDetails = require("../models/payment-details");
+const Rooms = require("../models/rooms");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const upload = require("../middleware/uploadmiddleware");
@@ -495,6 +496,24 @@ const orderSuccess = async (req, res) => {
     if (!bookingData) {
       return res.status(404).json({ message: "Booking not found" });
     }
+    
+    const room_id_fetch = bookingData.roomType.split("_")[1];
+    const bookedRooms = bookingData.number_of_cottages;
+
+    // Fetch the room using the provided booking ID
+    const roomData = await Rooms.findOne({
+      where: { id: room_id_fetch },
+    });
+
+    if (!roomData) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const room_status = roomData.status;
+
+    roomData.status.available -= bookedRooms; // Subtract from available
+    roomData.status.booked += bookedRooms; // Add to booked
+    await roomData.save();
 
     // Update the booking status to "confirmed" and set paymentStatus to "paid"
     bookingData.status = "confirmed";
