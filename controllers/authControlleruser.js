@@ -404,6 +404,7 @@ const order = async (req, res) => {
       customerPhone = phone;
     }
 
+    console.log(customerName,customerPhone,checkInDate,checkOutDate,roomType,number_of_cottages,selected_packages,selected_occupancy);
     if (
       !customerName ||
       !customerPhone ||
@@ -416,7 +417,7 @@ const order = async (req, res) => {
     ) {
       return res
         .status(400)
-        .json({ message: "Missing required booking details" });
+        .json({ message: "Missing required booking details",customerName,customerPhone,checkInDate,checkOutDate,roomType,number_of_cottages,selected_packages,selected_occupancy });
     }
 
     const instance = new Razorpay({
