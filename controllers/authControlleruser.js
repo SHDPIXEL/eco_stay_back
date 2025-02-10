@@ -523,9 +523,9 @@ const orderSuccess = async (req, res) => {
     }
     
     // Check if there are enough available rooms to book
-    if (availableRooms < bookedRooms) {
-      return res.status(400).json({ message: "Not enough rooms available." });
-    }
+    // if (availableRooms < bookedRooms) {
+    //   return res.status(400).json({ message: "Not enough rooms available." });
+    // }
     
     // Update room availability and booking status
     roomData.status.available -= bookedRooms;  // Subtract from available rooms
