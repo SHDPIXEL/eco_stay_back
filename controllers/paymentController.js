@@ -56,12 +56,12 @@ const getPaymentById = async (req, res) => {
 
 const getPaymentsByUserId = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { user_id } = req.params;
 
     const payments = await PaymentDetails.findAll({
       include: {
         model: BookingDetails,
-        where: { user_id: userId },
+        where: { user_id },
         attributes: ["id", "user_id"], // Include relevant booking fields
       },
     });
