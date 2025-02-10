@@ -208,6 +208,7 @@ const loginOrRegisterUser = async (req, res) => {
       });
 
       otpStore[phoneNumber] = generatedOtp;
+      console.log(`Generated OTP for ${phoneNumber}:`, generatedOtp);
 
       const senderId = senderIds[Math.floor(Math.random() * senderIds.length)];
       const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp}. Regards, Virya Wildlife Tours`;
@@ -218,13 +219,18 @@ const loginOrRegisterUser = async (req, res) => {
           message
         )}&numbers=${phoneNumber}`;
 
+      console.log("OTP API URL:", apiUrl); // Log API URL for debugging
+
       try {
         const response = await axios.get(apiUrl);
+        console.log("OTP API Response:", response.data); // Log response from API
+
         if (response.status === 200) {
-          console.log(`OTP ${generatedOtp} sent to ${phoneNumber}`);
+          console.log(`OTP ${generatedOtp} successfully sent to ${phoneNumber}`);
           return res.status(200).json({ message: "OTP sent successfully" });
         } else {
-          throw new Error("Failed to send OTP");
+          console.error("Failed to send OTP:", response.data);
+          return res.status(500).json({ message: "Failed to send OTP" });
         }
       } catch (error) {
         console.error("Error sending OTP:", error.message);
@@ -322,6 +328,7 @@ const loginOrRegisterUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
