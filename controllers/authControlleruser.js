@@ -180,7 +180,6 @@ const getuserdetails = async (req, res) => {
 const loginOrRegisterUser = async (req, res) => {
   try {
     console.log("Received body:", req.body);
-    console.log("Received file:", req.file);
 
     const {
       phoneNumber,
@@ -239,12 +238,6 @@ const loginOrRegisterUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // Process file upload asynchronously
-    let idProof = null;
-    if (req.file) {
-      idProof = req.file.filename;
-    }
-
     // Check if the user exists
     let user = await User.findOne({ where: { phone: phoneNumber } });
 
@@ -282,7 +275,6 @@ const loginOrRegisterUser = async (req, res) => {
         state,
         country,
         pincode,
-        idProof: idProof ? JSON.stringify(idProof) : null,
         otp_verified_at: new Date(),
         status: "Active",
       });
@@ -307,10 +299,6 @@ const loginOrRegisterUser = async (req, res) => {
       user.status = "Active";
       user.otp_verified_at = new Date();
 
-      if (idProof) {
-        user.idProof = JSON.stringify(idProof);
-      }
-
       await user.save();
 
       // Cleanup OTP
@@ -334,6 +322,7 @@ const loginOrRegisterUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
