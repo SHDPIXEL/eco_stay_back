@@ -441,7 +441,7 @@ const order = async (req, res) => {
 
     const newBooking = await BookingDetails.create({
       user_Id: userId || null, // Null if agent is booking
-      agentId: agent_Id || null, // Null if user is booking
+      agent_Id: agent_Id || null, // Null if user is booking
       customerName,
       customerPhone,
       checkInDate,
