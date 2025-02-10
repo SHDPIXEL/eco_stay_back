@@ -92,10 +92,8 @@ const getPaymentsByAgentId = async (req, res) => {
     const payments = await PaymentDetails.findAll({
       include: {
         model: BookingDetails,
-        attributes: ["id", "agentId", "user_Id"],
-      },
-      where: {
-        "$BookingDetail.agentId$": agentId, // Ensure Sequelize recognizes alias
+        attributes: ["id", "user_Id","agentId"],
+        where: { agentId }, // Correctly reference the field inside `include`
       },
     });
 
