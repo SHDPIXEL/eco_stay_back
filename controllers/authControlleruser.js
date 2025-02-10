@@ -493,35 +493,53 @@ const orderSuccess = async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
     
-    // const room_id_fetch = bookingData.roomType.split("_")[1];
-    // const bookedRooms = bookingData.number_of_cottages;
-  
-    // // Fetch the room using the provided booking ID
-    // const roomData = await Rooms.findOne({
-    //   where: { id: room_id_fetch },
-    // });
+    // Fetch room ID and booked rooms from the booking data
+    const room_id_fetch = bookingData.roomType.split("_")[1];
+    console.log("Room ID fetched from booking data:", room_id_fetch);  // Debugging room_id_fetch
+    
+    const bookedRooms = bookingData.number_of_cottages;
+    console.log("Number of cottages (rooms) booked:", bookedRooms);  // Debugging bookedRooms
+    
+    // Fetch the room using the provided room ID
+    const roomData = await Rooms.findOne({
+      where: { id: room_id_fetch },
+    });
+    
+    if (!roomData) {
+      console.log("Room not found in database");  // Debugging for room not found case
+      return res.status(404).json({ message: "Room not found" });
+    }
+    console.log("Room data fetched from database:", roomData);  // Debugging roomData
+    
+    // Ensure that available and booked are numbers before performing arithmetic
+    const availableRooms = parseInt(roomData.status.available, 10);
+    const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
+    console.log("Available rooms:", availableRooms);  // Debugging availableRooms
+    console.log("Booked rooms in room data:", bookedRoomsInRoom);  // Debugging bookedRoomsInRoom
+    
+    // Validate if the available and booked room values are correct numbers
+    if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
+      console.log("Room data is corrupted - available or booked values are not valid numbers.");  // Debugging invalid room data
+      return res.status(500).json({ message: "Room data is corrupted." });
+    }
+    
+    // Check if there are enough available rooms to book
+    if (availableRooms < bookedRooms) {
+      console.log("Not enough rooms available. Available:", availableRooms, "Requested:", bookedRooms);  // Debugging room availability check
+      return res.status(400).json({ message: "Not enough rooms available." });
+    }
+    
+    // Update room availability and booking status
+    console.log("Updating room availability...");
+    roomData.status.available -= bookedRooms;  // Subtract from available rooms
+    roomData.status.booked += bookedRooms;     // Add to booked rooms
+    console.log("Updated available rooms:", roomData.status.available);  // Debugging updated available rooms
+    console.log("Updated booked rooms:", roomData.status.booked);  // Debugging updated booked rooms
+    
+    // Save the updated room data
+    await roomData.save();
+    console.log("Room data saved successfully after update.");  // Debugging room save confirmation
 
-    // if (!roomData) {
-    //   return res.status(404).json({ message: "Room not found" });
-    // }
-    
-    // // Ensure that available and booked are numbers before performing arithmetic
-    // const availableRooms = parseInt(roomData.status.available, 10);
-    // const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
-    
-    // // if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
-    // //   return res.status(500).json({ message: "Room data is corrupted." });
-    // // }
-    
-    // // Check if there are enough available rooms to book
-    // // if (availableRooms < bookedRooms) {
-    // //   return res.status(400).json({ message: "Not enough rooms available." });
-    // // }
-    
-    // // Update room availability and booking status
-    // roomData.status.available -= bookedRooms;  // Subtract from available rooms
-    // roomData.status.booked += bookedRooms;     // Add to booked rooms
-    // await roomData.save();  // Save the updated room data
     
     // Update the booking status to "confirmed" and set paymentStatus to "paid"
     bookingData.status = "confirmed";
