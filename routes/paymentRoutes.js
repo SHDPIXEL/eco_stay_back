@@ -12,7 +12,7 @@ const {
 router.post('/payment', createPayment);
 router.get('/payment', getAllPayments);
 router.get('/payment/:id', getPaymentById);
-router.get('/payment/user/:user_id', getPaymentsByUserId);
+router.get('/payment/user/:userId', getPaymentsByUserId);
 router.get('/payment/agent/:agentId', getPaymentsByAgentId);
 
 module.exports = router;
