@@ -179,6 +179,9 @@ const getuserdetails = async (req, res) => {
 
 const loginOrRegisterUser = async (req, res) => {
   try {
+    console.log("Received body:", req.body);
+    console.log("Received file:", req.file);
+
     const {
       phoneNumber,
       otp,
@@ -197,7 +200,7 @@ const loginOrRegisterUser = async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // Handle OTP generation and sending
+    // If OTP is missing, generate and send it
     if (!otp) {
       const generatedOtp = otpGenerator.generate(6, {
         lowerCaseAlphabets: false,
@@ -208,8 +211,8 @@ const loginOrRegisterUser = async (req, res) => {
       otpStore[phoneNumber] = generatedOtp;
 
       const senderId = senderIds[Math.floor(Math.random() * senderIds.length)];
-      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp} use this Code to validate your verification, Regards, Virya Wildlife Tours`;
-    
+      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp}. Regards, Virya Wildlife Tours`;
+
       const apiUrl =
         process.env.OTP_BASE_SEND +
         `?username=viryawildlifetours&password=viryawildlifetours&senderid=${senderId}&message=${encodeURIComponent(
@@ -231,29 +234,16 @@ const loginOrRegisterUser = async (req, res) => {
     }
 
     // Validate OTP
-    const storedOtp = otpStore[phoneNumber];
-    if (!storedOtp || storedOtp !== otp) {
+    console.log("Stored OTP:", otpStore[phoneNumber], "Received OTP:", otp);
+    if (!otpStore[phoneNumber] || otpStore[phoneNumber] !== otp) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
     // Process file upload asynchronously
-    const processFileUpload = () =>
-      new Promise((resolve, reject) => {
-        upload.single("idProof")(req, res, (err) => {
-          if (err) {
-            reject(new Error(err.message));
-          } else {
-            resolve(req.file ? req.file.filename : null);
-          }
-        });
-      });
-
-    const idProof = await processFileUpload().catch((err) => {
-      console.error("File upload error:", err.message);
-      return res.status(400).json({ error: err.message });
-    });
-
-    if (res.headersSent) return; // Ensure no further processing if an error response is already sent
+    let idProof = null;
+    if (req.file) {
+      idProof = req.file.filename;
+    }
 
     // Check if the user exists
     let user = await User.findOne({ where: { phone: phoneNumber } });
@@ -270,6 +260,16 @@ const loginOrRegisterUser = async (req, res) => {
         !country ||
         !pincode
       ) {
+        console.log("Missing fields:", {
+          firstname,
+          lastname,
+          email,
+          address,
+          city,
+          state,
+          country,
+          pincode,
+        });
         return res.status(400).json({ error: "All fields are required" });
       }
 
@@ -282,7 +282,7 @@ const loginOrRegisterUser = async (req, res) => {
         state,
         country,
         pincode,
-        idProof: JSON.stringify(idProof),
+        idProof: idProof ? JSON.stringify(idProof) : null,
         otp_verified_at: new Date(),
         status: "Active",
       });
