@@ -518,9 +518,9 @@ const orderSuccess = async (req, res) => {
     const availableRooms = parseInt(roomData.status.available, 10);
     const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
     
-    if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
-      return res.status(500).json({ message: "Room data is corrupted." });
-    }
+    // if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
+    //   return res.status(500).json({ message: "Room data is corrupted." });
+    // }
     
     // Check if there are enough available rooms to book
     // if (availableRooms < bookedRooms) {
