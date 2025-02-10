@@ -69,6 +69,7 @@ async function sendOtpViaSms(phoneNumber, otp) {
 
   try {
     const response = await axios.get(apiUrl);
+    console.log("OTP API Response:", response.data); // Log response from API
     if (response.status === 200) {
       console.log(`OTP ${otp} sent to ${phoneNumber} via senderId ${senderId}`);
       return "OTP sent successfully"; // Return a success message
