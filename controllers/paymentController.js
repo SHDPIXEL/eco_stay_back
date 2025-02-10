@@ -56,17 +56,19 @@ const getPaymentById = async (req, res) => {
 
 const getPaymentsByUserId = async (req, res) => {
   try {
-    const { user_id } = req.params;
+    const { user_Id } = req.params; // Ensure correct parameter name
 
     const payments = await PaymentDetails.findAll({
       include: {
         model: BookingDetails,
-        where: { user_id },
-        attributes: ["id", "user_id"], // Include relevant booking fields
+        attributes: ["id", "user_Id"],
+      },
+      where: {
+        "$BookingDetail.user_Id$": user_Id, // Ensure Sequelize recognizes alias
       },
     });
 
-    if (payments.length === 0) {
+    if (!payments || payments.length === 0) {
       return res.status(404).json({ message: "No payments found for this user" });
     }
 
@@ -76,6 +78,7 @@ const getPaymentsByUserId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const getPaymentsByAgentId = async (req, res) => {
   try {
@@ -87,11 +90,11 @@ const getPaymentsByAgentId = async (req, res) => {
         attributes: ["id", "agentId", "user_Id"],
       },
       where: {
-        "$BookingDetail.agentId$": agentId, // Ensure Sequelize recognizes the alias
+        "$BookingDetail.agentId$": agentId, // Ensure Sequelize recognizes alias
       },
     });
 
-    if (payments.length === 0) {
+    if (!payments || payments.length === 0) {
       return res.status(404).json({ message: "No payments found for this agent" });
     }
 
@@ -101,6 +104,7 @@ const getPaymentsByAgentId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 
