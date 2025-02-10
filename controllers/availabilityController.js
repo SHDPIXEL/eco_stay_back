@@ -12,7 +12,7 @@ const getAvailabilityByRoomId = async (req, res) => {
       }
   
       const availability = await Availability.findOne({
-        where: { roomId },
+        where: { room_id:roomId },
       });
   
       if (!availability) {
