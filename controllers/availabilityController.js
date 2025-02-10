@@ -5,7 +5,7 @@ const getAvailabilityByRoomId = async (req, res) => {
     try {
       const { roomId } = req.params;
   
-      // Check if the room exists
+      // Check if the room exists test
       const room = await Rooms.findByPk(roomId);
       if (!room) {
         return res.status(404).json({ message: 'Room not found' });
