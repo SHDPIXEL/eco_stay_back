@@ -514,8 +514,8 @@ const orderSuccess = async (req, res) => {
     // Ensure that available and booked are numbers before performing arithmetic
    console.log("Raw roomData.status:", roomData.status);  // Log the entire status object to inspect it
 
-    const availableRooms = parseInt(roomData.status.available, 10);
-    const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
+    // const availableRooms = parseInt(roomData.status.available, 10);
+    // const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
 
     const availableRooms = parseInt(roomData.status.available.trim(), 10);
     const bookedRoomsInRoom = parseInt(roomData.status.booked.trim(), 10);
