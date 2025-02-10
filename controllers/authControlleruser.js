@@ -495,10 +495,10 @@ const orderSuccess = async (req, res) => {
     
     // Fetch room ID and booked rooms from the booking data
     const room_id_fetch = bookingData.roomType.split("_")[1];
-    console.log("Room ID fetched from booking data:", room_id_fetch);  // Debugging room_id_fetch
+    console.log("Room ID fetched from booking data:", room_id_fetch); // Debugging room_id_fetch
     
     const bookedRooms = bookingData.number_of_cottages;
-    console.log("Number of cottages (rooms) booked:", bookedRooms);  // Debugging bookedRooms
+    console.log("Number of cottages (rooms) booked:", bookedRooms); // Debugging bookedRooms
     
     // Fetch the room using the provided room ID
     const roomData = await Rooms.findOne({
@@ -506,42 +506,55 @@ const orderSuccess = async (req, res) => {
     });
     
     if (!roomData) {
-      console.log("Room not found in database");  // Debugging for room not found case
+      console.log("Room not found in database"); // Debugging for room not found case
       return res.status(404).json({ message: "Room not found" });
     }
-    console.log("Room data fetched from database:", roomData);  // Debugging roomData
+    console.log("Room data fetched from database:", roomData); // Debugging roomData
     
-    // Ensure that available and booked are numbers before performing arithmetic
-   console.log("Raw roomData.status:", roomData.status);  // Log the entire status object to inspect it
-
-    // const availableRooms = parseInt(roomData.status.available, 10);
-    // const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
-
-    const availableRooms = parseInt(roomData.status.available.trim(), 10);
-    const bookedRoomsInRoom = parseInt(roomData.status.booked.trim(), 10);
+    // Ensure that roomData.status is properly parsed from JSON (since it's stored as TEXT)
+    console.log("Raw roomData.status:", roomData.status); // Log the raw status data
     
-    // Validate if the available and booked room values are correct numbers
+    let roomStatus;
+    try {
+      roomStatus = JSON.parse(roomData.status); // Parse status as JSON
+    } catch (error) {
+      console.error("Error parsing room status:", error);
+      return res.status(500).json({ message: "Room data is corrupted." });
+    }
+    
+    // Extract available and booked rooms safely
+    const availableRooms = parseInt(roomStatus?.available || "0", 10);
+    const bookedRoomsInRoom = parseInt(roomStatus?.booked || "0", 10);
+    
+    console.log("Parsed available rooms:", availableRooms);
+    console.log("Parsed booked rooms:", bookedRoomsInRoom);
+    
+    // Validate if available and booked room values are correct numbers
     if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
-      console.log("Room data is corrupted - available or booked values are not valid numbers.");  // Debugging invalid room data
+      console.log("Room data is corrupted - available or booked values are not valid numbers.");
       return res.status(500).json({ message: "Room data is corrupted." });
     }
     
     // Check if there are enough available rooms to book
     if (availableRooms < bookedRooms) {
-      console.log("Not enough rooms available. Available:", availableRooms, "Requested:", bookedRooms);  // Debugging room availability check
+      console.log("Not enough rooms available. Available:", availableRooms, "Requested:", bookedRooms);
       return res.status(400).json({ message: "Not enough rooms available." });
     }
     
     // Update room availability and booking status
     console.log("Updating room availability...");
-    roomData.status.available -= bookedRooms;  // Subtract from available rooms
-    roomData.status.booked += bookedRooms;     // Add to booked rooms
-    console.log("Updated available rooms:", roomData.status.available);  // Debugging updated available rooms
-    console.log("Updated booked rooms:", roomData.status.booked);  // Debugging updated booked rooms
+    roomStatus.available -= bookedRooms; // Subtract from available rooms
+    roomStatus.booked += bookedRooms; // Add to booked rooms
+    console.log("Updated available rooms:", roomStatus.available);
+    console.log("Updated booked rooms:", roomStatus.booked);
+    
+    // Convert roomStatus back to a string before saving (since it's stored as TEXT)
+    roomData.status = JSON.stringify(roomStatus);
     
     // Save the updated room data
     await roomData.save();
-    console.log("Room data saved successfully after update.");  // Debugging room save confirmation
+    console.log("Room data saved successfully after update.");
+
 
     
     // Update the booking status to "confirmed" and set paymentStatus to "paid"
