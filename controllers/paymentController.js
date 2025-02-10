@@ -56,6 +56,7 @@ const getPaymentById = async (req, res) => {
 
 const getPaymentsByUserId = async (req, res) => {
   try {
+    console.log("Received params:", req.params); // Debugging log
     const { userId } = req.params; // Extract correctly
 
     const payments = await PaymentDetails.findAll({
