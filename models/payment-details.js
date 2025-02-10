@@ -57,9 +57,9 @@ const PaymentDetails = sequelize.define(
   }
 );
 
-// Define relationships
-BookingDetails.hasOne(PaymentDetails, { foreignKey: 'bookingId' });
-PaymentDetails.belongsTo(BookingDetails, { foreignKey: 'bookingId' });
+// Define Associations
+BookingDetails.hasMany(PaymentDetails, { foreignKey: "bookingId" });
+PaymentDetails.belongsTo(BookingDetails, { foreignKey: "bookingId" });
 
 (async () => {
     try {
