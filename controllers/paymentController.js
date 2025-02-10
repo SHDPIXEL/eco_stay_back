@@ -59,6 +59,11 @@ const getPaymentsByUserId = async (req, res) => {
     console.log("Received params:", req.params); // Debugging log
     const { userId } = req.params; // Extract correctly
 
+    if (!userId) {
+      return res.status(400).json({ error: "userId parameter is required" });
+    }
+
+
     const payments = await PaymentDetails.findAll({
       include: {
         model: BookingDetails,
