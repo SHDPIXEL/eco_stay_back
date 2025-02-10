@@ -517,8 +517,8 @@ const orderSuccess = async (req, res) => {
     const availableRooms = parseInt(roomData.status.available, 10);
     const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
 
-    console.log("Available rooms after parseInt:", availableRooms);  // Debugging availableRooms
-    console.log("Booked rooms after parseInt:", bookedRoomsInRoom);  // Debugging bookedRoomsInRoom
+    const availableRooms = parseInt(roomData.status.available.trim(), 10);
+    const bookedRoomsInRoom = parseInt(roomData.status.booked.trim(), 10);
     
     // Validate if the available and booked room values are correct numbers
     if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
