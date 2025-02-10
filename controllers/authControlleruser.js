@@ -273,13 +273,6 @@ const loginOrRegisterUser = async (req, res) => {
         return res.status(400).json({ error: "All fields are required" });
       }
 
-      const emailUser = await User.findOne({ where: { email } });
-      if (emailUser) {
-        return res
-          .status(409)
-          .json({ error: "User already exists with this email" });
-      }
-
       user = await User.create({
         name: `${firstname} ${lastname}`,
         email,
