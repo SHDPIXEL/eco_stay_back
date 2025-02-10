@@ -504,7 +504,7 @@ const orderSuccess = async (req, res) => {
     
     const room_id_fetch = bookingData.roomType.split("_")[1];
     const bookedRooms = bookingData.number_of_cottages;
-
+  
     // Fetch the room using the provided booking ID
     const roomData = await Rooms.findOne({
       where: { id: room_id_fetch },
@@ -513,17 +513,33 @@ const orderSuccess = async (req, res) => {
     if (!roomData) {
       return res.status(404).json({ message: "Room not found" });
     }
-
-    const room_status = roomData.status;
-
-    roomData.status.available -= bookedRooms; // Subtract from available
-    roomData.status.booked += bookedRooms; // Add to booked
-    await roomData.save();
-
+    
+    // Ensure that available and booked are numbers before performing arithmetic
+    const availableRooms = parseInt(roomData.status.available, 10);
+    const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
+    
+    if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
+      return res.status(500).json({ message: "Room data is corrupted." });
+    }
+    
+    // Check if there are enough available rooms to book
+    if (availableRooms < bookedRooms) {
+      return res.status(400).json({ message: "Not enough rooms available." });
+    }
+    
+    // Update room availability and booking status
+    roomData.status.available -= bookedRooms;  // Subtract from available rooms
+    roomData.status.booked += bookedRooms;     // Add to booked rooms
+    await roomData.save();  // Save the updated room data
+    
     // Update the booking status to "confirmed" and set paymentStatus to "paid"
     bookingData.status = "confirmed";
     bookingData.paymentStatus = "paid";
-    await bookingData.save();
+    await bookingData.save();  // Save the updated booking data
+    
+    // Respond with success
+    return res.status(200).json({ message: "Booking confirmed and rooms updated successfully." });
+
 
     // Create a new entry in the PaymentDetails table
     const newPayment = await PaymentDetails.create({
