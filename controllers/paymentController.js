@@ -56,15 +56,13 @@ const getPaymentById = async (req, res) => {
 
 const getPaymentsByUserId = async (req, res) => {
   try {
-    const { user_Id } = req.params; // Ensure correct parameter name
+    const { userId } = req.params; // Extract correctly
 
     const payments = await PaymentDetails.findAll({
       include: {
         model: BookingDetails,
         attributes: ["id", "user_Id"],
-      },
-      where: {
-        "$BookingDetail.user_Id$": user_Id, // Ensure Sequelize recognizes alias
+        where: { user_Id: userId }, // Correctly reference the field inside `include`
       },
     });
 
@@ -78,6 +76,7 @@ const getPaymentsByUserId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 const getPaymentsByAgentId = async (req, res) => {
