@@ -54,6 +54,51 @@ const getPaymentById = async (req, res) => {
   }
 };
 
+const getPaymentsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const payments = await PaymentDetails.findAll({
+      include: {
+        model: BookingDetails,
+        where: { user_id: userId },
+        attributes: ["id", "user_id"], // Include relevant booking fields
+      },
+    });
+
+    if (payments.length === 0) {
+      return res.status(404).json({ message: "No payments found for this user" });
+    }
+
+    res.status(200).json(payments);
+  } catch (error) {
+    console.error("Error fetching payments by user:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getPaymentsByAgentId = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+
+    const payments = await PaymentDetails.findAll({
+      include: {
+        model: BookingDetails,
+        where: { agentId },
+        attributes: ["id", "agentId"], // Include relevant booking fields
+      },
+    });
+
+    if (payments.length === 0) {
+      return res.status(404).json({ message: "No payments found for this agent" });
+    }
+
+    res.status(200).json(payments);
+  } catch (error) {
+    console.error("Error fetching payments by agent:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 
@@ -62,4 +107,6 @@ module.exports = {
   createPayment,
   getAllPayments,
   getPaymentById,
+  getPaymentsByUserId,
+  getPaymentsByAgentId
 };
