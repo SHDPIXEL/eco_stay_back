@@ -536,10 +536,6 @@ const orderSuccess = async (req, res) => {
     bookingData.status = "confirmed";
     bookingData.paymentStatus = "paid";
     await bookingData.save();  // Save the updated booking data
-    
-    // Respond with success
-    res.status(200).json({ message: "Booking confirmed and rooms updated successfully." });
-
 
     // Create a new entry in the PaymentDetails table
     const newPayment = await PaymentDetails.create({
@@ -559,7 +555,6 @@ const orderSuccess = async (req, res) => {
       paymentId: razorpayPaymentId,
       bookingId: bookingData.booking_id,
       paymentDetails: newPayment,
-      status:true // Return payment details in the response
     });
   } catch (error) {
     console.error("Error verifying payment:", error);
