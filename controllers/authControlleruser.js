@@ -538,7 +538,7 @@ const orderSuccess = async (req, res) => {
     await bookingData.save();  // Save the updated booking data
     
     // Respond with success
-    return res.status(200).json({ message: "Booking confirmed and rooms updated successfully." });
+    res.status(200).json({ message: "Booking confirmed and rooms updated successfully." });
 
 
     // Create a new entry in the PaymentDetails table
