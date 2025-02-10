@@ -213,7 +213,7 @@ const loginOrRegisterUser = async (req, res) => {
       console.log(`Generated OTP for ${phoneNumber}:`, generatedOtp);
 
       const senderId = senderIds[Math.floor(Math.random() * senderIds.length)];
-      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp}. Regards, Virya Wildlife Tours`;
+      const message = `Dear Sir / Ma'am, Your OTP for Mobile verification is ${generatedOtp} use this Code to validate your verification, Regards, Virya Wildlife Tours`;
 
       const apiUrl =
         process.env.OTP_BASE_SEND +
