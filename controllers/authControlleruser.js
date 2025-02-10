@@ -512,10 +512,13 @@ const orderSuccess = async (req, res) => {
     console.log("Room data fetched from database:", roomData);  // Debugging roomData
     
     // Ensure that available and booked are numbers before performing arithmetic
+   console.log("Raw roomData.status:", roomData.status);  // Log the entire status object to inspect it
+
     const availableRooms = parseInt(roomData.status.available, 10);
     const bookedRoomsInRoom = parseInt(roomData.status.booked, 10);
-    console.log("Available rooms:", availableRooms);  // Debugging availableRooms
-    console.log("Booked rooms in room data:", bookedRoomsInRoom);  // Debugging bookedRoomsInRoom
+
+    console.log("Available rooms after parseInt:", availableRooms);  // Debugging availableRooms
+    console.log("Booked rooms after parseInt:", bookedRoomsInRoom);  // Debugging bookedRoomsInRoom
     
     // Validate if the available and booked room values are correct numbers
     if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
