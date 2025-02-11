@@ -68,9 +68,7 @@ async function sendOtpViaSms(phoneNumber, otp) {
     )}&numbers=${phoneNumber}`;
 
   try {
-    console.log("API Response:", apiUrl);
     const response = await axios.get(apiUrl);
-    console.log("OTP API Response:", response.data); // Log response from API
     if (response.status === 200) {
       console.log(`OTP ${otp} sent to ${phoneNumber} via senderId ${senderId}`);
       return "OTP sent successfully"; // Return a success message
@@ -221,11 +219,8 @@ const loginOrRegisterUser = async (req, res) => {
           message
         )}&numbers=${phoneNumber}`;
 
-      console.log("OTP API URL:", apiUrl); // Log API URL for debugging
-
       try {
         const response = await axios.get(apiUrl);
-        console.log("OTP API Response:", response.data); // Log response from API
 
         if (response.status === 200) {
           console.log(`OTP ${generatedOtp} successfully sent to ${phoneNumber}`);
@@ -241,7 +236,6 @@ const loginOrRegisterUser = async (req, res) => {
     }
 
     // Validate OTP
-    console.log("Stored OTP:", otpStore[phoneNumber], "Received OTP:", otp);
     if (!otpStore[phoneNumber] || otpStore[phoneNumber] !== otp) {
       return res.status(401).json({ message: "Invalid OTP" });
     }
@@ -495,10 +489,7 @@ const orderSuccess = async (req, res) => {
     
     // Fetch room ID and booked rooms from the booking data
     const room_id_fetch = bookingData.roomType.split("_")[1];
-    console.log("Room ID fetched from booking data:", room_id_fetch); // Debugging room_id_fetch
-    
     const bookedRooms = bookingData.number_of_cottages;
-    console.log("Number of cottages (rooms) booked:", bookedRooms); // Debugging bookedRooms
     
     // Fetch the room using the provided room ID
     const roomData = await Rooms.findOne({
@@ -509,10 +500,8 @@ const orderSuccess = async (req, res) => {
       console.log("Room not found in database"); // Debugging for room not found case
       return res.status(404).json({ message: "Room not found" });
     }
-    console.log("Room data fetched from database:", roomData); // Debugging roomData
     
     // Ensure that roomData.status is properly parsed from JSON (since it's stored as TEXT)
-    console.log("Raw roomData.status:", roomData.status); // Log the raw status data
     
     let roomStatus;
     try {
@@ -526,8 +515,6 @@ const orderSuccess = async (req, res) => {
     const availableRooms = parseInt(roomStatus?.available || "0", 10);
     const bookedRoomsInRoom = parseInt(roomStatus?.booked || "0", 10);
     
-    console.log("Parsed available rooms:", availableRooms);
-    console.log("Parsed booked rooms:", bookedRoomsInRoom);
     
     // Validate if available and booked room values are correct numbers
     if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
@@ -542,11 +529,8 @@ const orderSuccess = async (req, res) => {
     }
     
     // Update room availability and booking status
-    console.log("Updating room availability...");
     roomStatus.available -= bookedRooms; // Subtract from available rooms
     roomStatus.booked += bookedRooms; // Add to booked rooms
-    console.log("Updated available rooms:", roomStatus.available);
-    console.log("Updated booked rooms:", roomStatus.booked);
     
     // Convert roomStatus back to a string before saving (since it's stored as TEXT)
     roomData.status = JSON.stringify(roomStatus);
@@ -555,8 +539,6 @@ const orderSuccess = async (req, res) => {
     await roomData.save();
     console.log("Room data saved successfully after update.");
 
-
-    
     // Update the booking status to "confirmed" and set paymentStatus to "paid"
     bookingData.status = "confirmed";
     bookingData.paymentStatus = "paid";
