@@ -1,5 +1,5 @@
 const express = require('express');
-const { sendOtp, verifyOtp,getuserdetails,loginOrRegisterUser,order,orderSuccess } = require('../controllers/authControlleruser');
+const { sendOtp, verifyOtp,getuserdetails,loginOrRegisterUser,order,orderSuccess,registerOrLoginWithGoogle } = require('../controllers/authControlleruser');
 const { validateRequestBody, verifyToken, otpRateLimiter } = require('../middleware/usermiddleware');
 
 const router = express.Router();
@@ -11,6 +11,7 @@ router.post('/user-data',getuserdetails);
 router.post('/booking_register',loginOrRegisterUser)
 router.post('/booking/orders',order)
 router.post('/booking/success',orderSuccess)
+router.post('/user/google-login',registerOrLoginWithGoogle)
 
 // Example of a protected route
 router.get('/protected-route', verifyToken, (req, res) => {
