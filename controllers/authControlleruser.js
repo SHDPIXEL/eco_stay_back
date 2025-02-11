@@ -573,20 +573,21 @@ const registerOrLoginWithGoogle = async (req, res) => {
   try {
     console.log("Received request body:", req.body); // Log incoming request data
 
-    const { name, email, idProof,phone } = req.body;
+    const { name, email, idProof, phone } = req.body;
 
-    if (!email) {
-      console.log("Email is missing in the request");
-      return res.status(400).json({ message: "Email is required" });
+    if (!email || !phone) {
+      console.log("Email or phone is missing in the request");
+      return res.status(400).json({ message: "Email and phone are required" });
     }
 
-    // Check if user exists
-    let user = await User.findOne({ where: { email,phone } });
+    // Check if user exists with both email and phone
+    let user = await User.findOne({ where: { email, phone } });
     console.log("User found in database:", user);
 
     if (!user) {
       console.log("User not found, creating a new user...");
-      user = await User.create({ name, email, idProof,phone });
+      // If user does not exist, create a new one
+      user = await User.create({ name, email, idProof, phone });
       console.log("New user created:", user);
     }
 
@@ -599,12 +600,13 @@ const registerOrLoginWithGoogle = async (req, res) => {
 
     console.log("Generated JWT token:", token);
 
-    res.json({ message: "Login successful", token});
+    res.json({ message: "Login successful", token });
   } catch (error) {
     console.error("Error in registerOrLoginWithGoogle:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 module.exports = {
   sendOtp,
