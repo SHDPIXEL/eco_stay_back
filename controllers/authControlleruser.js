@@ -573,7 +573,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
   try {
     console.log("Received request body:", req.body); // Log incoming request data
 
-    const { name, email, idProof } = req.body;
+    const { name, email, idProof,phone } = req.body;
 
     if (!email) {
       console.log("Email is missing in the request");
@@ -586,7 +586,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
 
     if (!user) {
       console.log("User not found, creating a new user...");
-      user = await User.create({ name, email, idProof });
+      user = await User.create({ name, email, idProof,phone });
       console.log("New user created:", user);
     }
 
