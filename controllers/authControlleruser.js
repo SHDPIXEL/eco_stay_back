@@ -592,14 +592,14 @@ const registerOrLoginWithGoogle = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { userId: user.id, phone: user.phone, isAgent: false }, // Payload
+      process.env.JWT_SECRET, // Secret
+      { expiresIn: "1h" } // Options
     );
 
     console.log("Generated JWT token:", token);
 
-    res.json({ message: "Login successful", token, user });
+    res.json({ message: "Login successful", token});
   } catch (error) {
     console.error("Error in registerOrLoginWithGoogle:", error);
     res.status(500).json({ message: "Server error" });
