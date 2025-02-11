@@ -569,6 +569,36 @@ const orderSuccess = async (req, res) => {
   }
 };
 
+const registerOrLoginWithGoogle = async (req, res) => {
+  try {
+    const { name, email, idProof } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      // Register the user
+      user = await User.create({ name, email, idProof });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.json({ message: "Login successful", token, user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   sendOtp,
   verifyOtp,
@@ -576,4 +606,5 @@ module.exports = {
   loginOrRegisterUser,
   order,
   orderSuccess,
+  registerOrLoginWithGoogle
 };
