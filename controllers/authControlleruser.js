@@ -241,7 +241,7 @@ const loginOrRegisterUser = async (req, res) => {
     }
 
     // Check if the user exists
-    let user = await User.findOne({ where: { phone: phoneNumber } });
+    let user = await User.findOne({ where: { phone: phoneNumber,email: email } });
 
     if (!user) {
       // Register a new user
