@@ -89,17 +89,19 @@ const getUserById = async (req, res) => {
 
 const getUserByEmail = async (req, res) => {
     try {
-        console.log("recieved body",req.body);
+        console.log("Received body:", req.body); // Log the entire request body
+        
         let { email } = req.body; // Assuming email is passed in the request body
         
         if (!email) {
             return res.status(400).json({ message: 'Email is required' });
         }
-        console.log("email",email)
+        
+        console.log("Email before trimming:", email);
         email = email.trim(); // Trim any leading/trailing spaces
-
-        // Log email for debugging
-        console.log('Email received:', email);
+        
+        // Log email after trimming
+        console.log('Email after trimming:', email);
 
         // Case-insensitive email lookup
         const user = await User.findOne({
@@ -107,6 +109,9 @@ const getUserByEmail = async (req, res) => {
             attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
             logging: console.log, // Logs the SQL query for debugging
         });
+
+        // Log the fetched user for debugging
+        console.log('Fetched User:', user);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
