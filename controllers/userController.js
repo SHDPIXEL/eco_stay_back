@@ -92,39 +92,39 @@ const getUserByEmail = async (req, res) => {
         console.log("Received body:", req.body); // Log the entire request body
         
         let { email } = req.body; // Assuming email is passed in the request body
-        return res.status(400).json(req.body);
-    //     if (!email) {
-    //         return res.status(400).json({ message: 'Email is required' });
-    //     }
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
         
-    //     console.log("Email before trimming:", email);
-    //     email = email.trim(); // Trim any leading/trailing spaces
+        console.log("Email before trimming:", email);
+        email = email.trim(); // Trim any leading/trailing spaces
         
-    //     // Log email after trimming
-    //     console.log('Email after trimming:', email);
+        // Log email after trimming
+        console.log('Email after trimming:', email);
 
-    //     // Case-insensitive email lookup
-    //     const user = await User.findOne({
-    //         where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('email')), Sequelize.fn('LOWER', email)),
-    //         attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
-    //         logging: console.log, // Logs the SQL query for debugging
-    //     });
+        // Case-insensitive email lookup
+        const user = await User.findOne({
+            where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('email')), Sequelize.fn('LOWER', email)),
+            attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
+            logging: console.log, // Logs the SQL query for debugging
+        });
 
-    //     // Log the fetched user for debugging
-    //     console.log('Fetched User:', user);
+        // Log the fetched user for debugging
+        console.log('Fetched User:', user);
 
-    //     if (!user) {
-    //         res.status(404).json({ message: 'User not found' });
-    //     }
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+        }
 
-    //     // Generate JWT token
-    //     const token = jwt.sign(
-    //         { userId: user.id, userName: user.name },
-    //         process.env.JWT_SECRET,
-    //         { expiresIn: "1h" }
-    //     );
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user.id, userName: user.name },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
 
-    //     return res.status(200).json({ message: 'User logged in successfully', user, token });
+        return res.status(200).json({ message: 'User logged in successfully', user, token });
     } catch (error) {
         console.error('Error fetching user by email:', error);
         return res.status(500).json({ message: 'Internal server error' });
