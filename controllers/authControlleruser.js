@@ -601,7 +601,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
     }
 
 // Check if user exists with the given email
-    let user = await User.findOne({ where: { phone, idProof } });
+    let user = await User.findOne({ where: { email, phone, idProof } });
     console.log("User found with phone:", user);
 
     if (user) {
