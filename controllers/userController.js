@@ -105,11 +105,10 @@ const getUserByEmail = async (req, res) => {
 
         // Case-insensitive email lookup
         const user = await User.findOne({
-            where: email,
-            attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
-            logging: console.log, // Logs the SQL query for debugging
+          where: { email }, // ✅ Correct usage
+          attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
+          logging: console.log,
         });
-
         // Log the fetched user for debugging
         console.log('Fetched User:', user);
 
