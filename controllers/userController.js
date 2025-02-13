@@ -90,7 +90,7 @@ const getUserById = async (req, res) => {
 const getUserByEmail = async (req, res) => {
     try {
         console.log("Received body:", req.body); // Log the entire request body
-        
+        return res.status(400).json(req.body);
         let { email } = req.body; // Assuming email is passed in the request body
         
         if (!email) {
