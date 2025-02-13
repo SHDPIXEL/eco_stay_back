@@ -265,31 +265,6 @@ const loginOrRegisterUser = async (req, res) => {
       });
     }
 
-    // Check if a user exists with the given email
-    user = await User.findOne({ where: { email } });
-
-    if (user) {
-      user.status = "Active";
-      user.otp_verified_at = new Date();
-      await user.save();
-
-      // Cleanup OTP
-      delete otpStore[phoneNumber];
-
-      // Generate token
-      const token = jwt.sign(
-        { userId: user.id, phone: user.phone },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return res.status(200).json({
-        message: "User already exists with this email. Logging in...",
-        token,
-        user,
-      });
-    }
-
     if (!user) {
       // Register a new user
       if (
@@ -371,8 +346,6 @@ const loginOrRegisterUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 
 
 
@@ -628,31 +601,11 @@ const registerOrLoginWithGoogle = async (req, res) => {
     }
 
 // Check if user exists with the given email
-    let user = await User.findOne({ where: { email } });
-    console.log("User found with email:", user);
-
-    if (user) {
-      console.log("User already exists with this email. Logging in...");
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user.id, phone: user.phone, isAgent: false },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return res.status(200).json({
-        message: "User already exists with this email. Logging in...",
-        token,
-        user,
-      });
-    }
-
-    // Check if user exists with the given phone number
-    user = await User.findOne({ where: { phone } });
+    let user = await User.findOne({ where: { phone, idProof } });
     console.log("User found with phone:", user);
 
     if (user) {
-      console.log("User already exists with this phone number. Logging in...");
+      console.log("User already exists with this phone. Logging in...");
       // Generate JWT token
       const token = jwt.sign(
         { userId: user.id, phone: user.phone, isAgent: false },
@@ -661,9 +614,9 @@ const registerOrLoginWithGoogle = async (req, res) => {
       );
 
       return res.status(200).json({
-        message: "User already exists with this phone number. Logging in...",
+        message: "User already exists with this phone. Logging in...",
         token,
-        user,
+        status: "USER LOGGED-IN"
       });
     }
 
@@ -683,7 +636,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
 
     console.log("Generated JWT token:", token);
 
-    res.json({ message: "Login successful", token });
+    res.json({ message: "Login successful", token, status: "USER CREATED" });
   } catch (error) {
     console.error("Error in registerOrLoginWithGoogle:", error);
     res.status(500).json({ message: "Server error" });
