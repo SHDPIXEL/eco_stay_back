@@ -240,8 +240,55 @@ const loginOrRegisterUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
-    // Check if the user exists
-    let user = await User.findOne({ where: { phone: phoneNumber,email: email } });
+ // Check if a user exists with the given phone number
+    let user = await User.findOne({ where: { phone: phoneNumber } });
+
+    if (user) {
+      user.status = "Active";
+      user.otp_verified_at = new Date();
+      await user.save();
+
+      // Cleanup OTP
+      delete otpStore[phoneNumber];
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: user.id, phone: user.phone },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "User already exists with this phone number. Logging in...",
+        token,
+        user,
+      });
+    }
+
+    // Check if a user exists with the given email
+    user = await User.findOne({ where: { email } });
+
+    if (user) {
+      user.status = "Active";
+      user.otp_verified_at = new Date();
+      await user.save();
+
+      // Cleanup OTP
+      delete otpStore[phoneNumber];
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: user.id, phone: user.phone },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "User already exists with this email. Logging in...",
+        token,
+        user,
+      });
+    }
 
     if (!user) {
       // Register a new user
@@ -580,9 +627,45 @@ const registerOrLoginWithGoogle = async (req, res) => {
       return res.status(400).json({ message: "Email and phone are required" });
     }
 
-    // Check if user exists with both email and phone
-    let user = await User.findOne({ where: { email, phone } });
-    console.log("User found in database:", user);
+// Check if user exists with the given email
+    let user = await User.findOne({ where: { email } });
+    console.log("User found with email:", user);
+
+    if (user) {
+      console.log("User already exists with this email. Logging in...");
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.id, phone: user.phone, isAgent: false },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "User already exists with this email. Logging in...",
+        token,
+        user,
+      });
+    }
+
+    // Check if user exists with the given phone number
+    user = await User.findOne({ where: { phone } });
+    console.log("User found with phone:", user);
+
+    if (user) {
+      console.log("User already exists with this phone number. Logging in...");
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.id, phone: user.phone, isAgent: false },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "User already exists with this phone number. Logging in...",
+        token,
+        user,
+      });
+    }
 
     if (!user) {
       console.log("User not found, creating a new user...");
