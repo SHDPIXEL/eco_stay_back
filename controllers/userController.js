@@ -105,7 +105,7 @@ const getUserByEmail = async (req, res) => {
 
         // Case-insensitive email lookup
         const user = await User.findOne({
-            where: Sequelize.where(Sequelize.fn('LOWER', Sequelize.col('email')), Sequelize.fn('LOWER', email)),
+            where: email,
             attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
             logging: console.log, // Logs the SQL query for debugging
         });
