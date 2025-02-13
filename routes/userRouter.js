@@ -20,7 +20,7 @@ router.get("/user", getUsers);
 router.get("/user/:id", getUserById);
 
 // Get a user by ID
-router.get("/user/byemail", getUserByEmail);
+router.get("/user/byEmail", getUserByEmail);
 
 // Update user information
 router.put("/user", updateUser);
