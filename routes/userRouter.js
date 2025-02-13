@@ -18,6 +18,7 @@ router.get("/user", getUsers);
 
 // Get a user by ID
 router.get("/user/:id", getUserById);
+
 // Get a user by ID
 router.get("/user/byemail", getUserByEmail);
 
