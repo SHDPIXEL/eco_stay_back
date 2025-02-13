@@ -591,8 +591,6 @@ const orderSuccess = async (req, res) => {
 
 const registerOrLoginWithGoogle = async (req, res) => {
   try {
-    console.log("Received request body:", req.body); // Log incoming request data
-
     const { name, email, idProof, phone } = req.body;
 
     if (!email || !phone) {
@@ -633,8 +631,6 @@ const registerOrLoginWithGoogle = async (req, res) => {
       process.env.JWT_SECRET, // Secret
       { expiresIn: "1h" } // Options
     );
-
-    console.log("Generated JWT token:", token);
 
     res.json({ message: "Login successful", token, status: "USER CREATED" });
   } catch (error) {
