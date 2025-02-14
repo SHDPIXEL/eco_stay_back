@@ -4,7 +4,6 @@ const {
   createUser,
   getUsers,
   getUserById,
-  getUserByEmail,
   updateUser,
   deleteUser,
   getUserBookings,
@@ -18,9 +17,6 @@ router.get("/user", getUsers);
 
 // Get a user by ID
 router.get("/user/:id", getUserById);
-
-// Get a user by ID
-router.post("/user/byEmail", getUserByEmail);
 
 // Update user information
 router.put("/user", updateUser);
