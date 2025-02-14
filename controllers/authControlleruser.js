@@ -638,23 +638,13 @@ const registerOrLoginWithGoogle = async (req, res) => {
     }
 
 // Check if user exists with the given email
-    let user = await User.findOne({ where: { email, phone } });
+    let user = await User.findOne({ where: { phone } });
     console.log("User found with phone:", user);
 
     if (user) {
-      console.log("User already exists with this phone. Logging in...");
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user.id, phone: user.phone, isAgent: false },
-        process.env.JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return res.status(200).json({
-        message: "User already exists with this phone. Logging in...",
-        token,
-        status: "USER LOGGED-IN"
-      });
+       user.name = user.name || name;
+       user.email = user.email || email;
+       user.idProof = user.idProof || idProof;
     }
 
     if (!user) {
@@ -671,7 +661,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
       { expiresIn: "1h" } // Options
     );
 
-    res.json({ message: "Login successful", token, status: "USER CREATED" });
+    res.json({ message: "Login successful", token });
   } catch (error) {
     console.error("Error in registerOrLoginWithGoogle:", error);
     res.status(500).json({ message: "Server error" });
