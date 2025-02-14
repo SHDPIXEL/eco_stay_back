@@ -645,6 +645,7 @@ const registerOrLoginWithGoogle = async (req, res) => {
        user.name = user.name || name;
        user.email = user.email || email;
        user.idProof = user.idProof || idProof;
+       await user.save();
     }
 
     if (!user) {
