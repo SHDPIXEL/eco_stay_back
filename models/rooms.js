@@ -111,7 +111,7 @@ const Rooms = sequelize.define(
 // Sync model
 (async () => {
   try {
-    await Rooms.sync({ force: true });
+    await Rooms.sync({ force: false });
     console.log("The table for the Rooms model was just (re)created!");
   } catch (error) {
     console.error("Error syncing the Rooms model:", error);
