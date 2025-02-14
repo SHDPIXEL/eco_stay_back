@@ -53,6 +53,7 @@ const User = sequelize.define(
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true, 
       validate: {
         // You can add a custom validation to ensure it's a valid phone number format if necessary.
         is: {
@@ -110,7 +111,7 @@ BookingDetails.belongsTo(User, { foreignKey: 'userId' });
 // Sync the model with the database
 (async () => {
   try {
-    await User.sync({ force: false});
+    await User.sync({ force: true});
     console.log('The table for the User model was just (re)created!');
   } catch (error) {
     console.error('Error syncing the User model:', error);
