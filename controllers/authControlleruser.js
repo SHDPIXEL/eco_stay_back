@@ -686,5 +686,6 @@ module.exports = {
   loginOrRegisterUser,
   order,
   orderSuccess,
+  getUserByEmail,
   registerOrLoginWithGoogle
 };
