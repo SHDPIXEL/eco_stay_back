@@ -607,7 +607,7 @@ const getUserByEmail = async (req, res) => {
         if (!user) {
           modal= true;
           const submittedData = req.body
-           return res.status(404).json({ message: 'User not found',submittedData,modal });
+           return res.status(200).json({ message: 'User not found',submittedData,modal });
         }
 
         if(user.phone === null){
