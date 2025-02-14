@@ -111,7 +111,7 @@ BookingDetails.belongsTo(User, { foreignKey: 'userId' });
 // Sync the model with the database
 (async () => {
   try {
-    await User.sync({ force: true});
+    await User.sync({ force: false});
     console.log('The table for the User model was just (re)created!');
   } catch (error) {
     console.error('Error syncing the User model:', error);
