@@ -221,7 +221,6 @@ module.exports = {
   createUser,
   getUsers,
   getUserById,
-  getUserByEmail,
   updateUser,
   deleteUser,
   getUserBookings,
