@@ -404,6 +404,7 @@ const createRoom = async (req, res) => {
         status,
         amenities,
       } = roomData;
+      console.log(roomData)
 
       //return res.status(401).json({ message: "test" });
       // Create a new room record
