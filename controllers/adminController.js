@@ -397,8 +397,10 @@ const createRoom = async (req, res) => {
         capacity,
         single_base_price,
         double_base_price,
+        triple_base_price,
         single_new_price,
         double_new_price,
+        triple_new_price,
         status,
         amenities,
       } = roomData;
@@ -413,8 +415,10 @@ const createRoom = async (req, res) => {
         capacity,
         single_base_price,
         double_base_price,
+        triple_base_price,
         single_new_price,
         double_new_price,
+        triple_new_price,
         status: JSON.stringify(status),
         room_images: JSON.stringify(roomImages), // Store filenames as JSON in the database
         amenities,
@@ -506,8 +510,10 @@ const updateRoom = async (req, res) => {
         capacity,
         single_base_price,
         double_base_price,
+        triple_base_price,
         single_new_price,
         double_new_price,
+        triple_new_price,
         status,
         amenities,
       } = responseBody;
@@ -520,8 +526,10 @@ const updateRoom = async (req, res) => {
       room.capacity = capacity || room.capacity;
       room.single_base_price = single_base_price || room.single_base_price;
       room.double_base_price = double_base_price || room.double_base_price;
+      room.triple_base_price = triple_base_price || room.triple_base_price;
       room.single_new_price = single_new_price || room.single_new_price;
       room.double_new_price = double_new_price || room.double_new_price;
+      room.triple_new_price = triple_new_price || room.triple_new_price;
       room.status = status || room.status;
       room.room_images = updatedRoomImages; // Update with new or existing images
       room.amenities = amenities || room.amenities;

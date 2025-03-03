@@ -65,6 +65,14 @@ const Rooms = sequelize.define(
         min: 0, // Ensures price is non-negative
       },
     },
+    triple_base_price: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        isFloat: true,
+        min: 0, // Ensures price is non-negative
+      },
+    },
     single_new_price: {
       type: DataTypes.FLOAT,
       allowNull: true,
@@ -74,6 +82,14 @@ const Rooms = sequelize.define(
       },
     },
     double_new_price: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      validate: {
+        isFloat: true,
+        min: 0, // Ensures price is non-negative
+      },
+    },
+    triple_new_price: {
       type: DataTypes.FLOAT,
       allowNull: true,
       validate: {
