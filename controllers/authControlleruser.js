@@ -7,6 +7,7 @@ const Agent = require("../models/agent");
 const BookingDetails = require("../models/booking-details");
 const PaymentDetails = require("../models/payment-details");
 const Rooms = require("../models/rooms");
+const RoomStatus = require("../models/roomStatus");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const upload = require("../middleware/uploadmiddleware");
@@ -223,7 +224,9 @@ const loginOrRegisterUser = async (req, res) => {
         const response = await axios.get(apiUrl);
 
         if (response.status === 200) {
-          console.log(`OTP ${generatedOtp} successfully sent to ${phoneNumber}`);
+          console.log(
+            `OTP ${generatedOtp} successfully sent to ${phoneNumber}`
+          );
           return res.status(200).json({ message: "OTP sent successfully" });
         } else {
           console.error("Failed to send OTP:", response.data);
@@ -240,7 +243,7 @@ const loginOrRegisterUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid OTP" });
     }
 
- // Check if a user exists with the given phone number
+    // Check if a user exists with the given phone number
     let user = await User.findOne({ where: { phone: phoneNumber } });
 
     if (user) {
@@ -347,8 +350,6 @@ const loginOrRegisterUser = async (req, res) => {
   }
 };
 
-
-
 const order = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1]; // Extract token from Authorization header
@@ -382,7 +383,6 @@ const order = async (req, res) => {
       checkOutDate,
       roomType,
       number_of_cottages,
-      selected_packages,
       selected_occupancy,
       name,
       phone,
@@ -409,9 +409,9 @@ const order = async (req, res) => {
       }
       customerName = name;
       customerPhone = phone;
-      agent_Id = agent.id
+      agent_Id = agent.id;
     }
-    
+
     if (
       !customerName ||
       !customerPhone ||
@@ -419,12 +419,21 @@ const order = async (req, res) => {
       !checkOutDate ||
       !roomType ||
       !number_of_cottages ||
-      !selected_packages ||
       !selected_occupancy
     ) {
       return res
         .status(400)
-        .json({ message: "Missing required booking details",customerName,customerPhone,checkInDate,checkOutDate,roomType,number_of_cottages,selected_packages,selected_occupancy });
+        .json({
+          message: "Missing required booking details",
+          customerName,
+          customerPhone,
+          checkInDate,
+          checkOutDate,
+          roomType,
+          number_of_cottages,
+          selected_packages,
+          selected_occupancy,
+        });
     }
 
     const instance = new Razorpay({
@@ -453,7 +462,7 @@ const order = async (req, res) => {
       checkOutDate,
       roomType,
       number_of_cottages,
-      selected_packages,
+      selected_packages: "no packages selected",
       selected_occupancy,
       status: "pending",
       city,
@@ -475,10 +484,8 @@ const order = async (req, res) => {
   }
 };
 
-
 const orderSuccess = async (req, res) => {
   try {
-    // Extracting payment details from the request body
     const {
       orderCreationId,
       razorpayPaymentId,
@@ -488,99 +495,104 @@ const orderSuccess = async (req, res) => {
       amount,
     } = req.body;
 
-    // Creating our own digest for verification
+    // Verify the payment signature
     const shasum = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${orderCreationId}|${razorpayPaymentId}`);
     const digest = shasum.digest("hex");
 
-    // Verifying the signature
     if (digest !== razorpaySignature) {
       return res.status(400).json({ msg: "Transaction not legit!" });
     }
 
-    // Fetch the booking using the provided booking ID
+    // Fetch the booking details
     const bookingData = await BookingDetails.findOne({
-      where: { id: booking }, // Assuming `booking` contains the booking ID
+      where: { id: booking },
     });
 
     if (!bookingData) {
       return res.status(404).json({ message: "Booking not found" });
     }
-    
-    // Fetch room ID and booked rooms from the booking data
+
     const room_id_fetch = bookingData.roomType.split("_")[1];
     const bookedRooms = bookingData.number_of_cottages;
-    
-    // Fetch the room using the provided room ID
-    const roomData = await Rooms.findOne({
-      where: { id: room_id_fetch },
-    });
-    
-    if (!roomData) {
-      console.log("Room not found in database"); // Debugging for room not found case
-      return res.status(404).json({ message: "Room not found" });
+
+    // Use the check-in date from booking data instead of today's date
+    const checkInDate = bookingData.checkInDate; // Assuming it's stored as YYYY-MM-DD
+
+    if (!checkInDate) {
+      return res
+        .status(400)
+        .json({ message: "Check-in date is missing in booking data." });
     }
-    
-    // Ensure that roomData.status is properly parsed from JSON (since it's stored as TEXT)
-    
-    let roomStatus;
+
+    // Fetch the room status for the check-in date
+    let roomStatus = await RoomStatus.findOne({
+      where: {
+        room_id: room_id_fetch,
+        date: checkInDate,
+      },
+    });
+
+    if (!roomStatus) {
+      return res
+        .status(404)
+        .json({ message: `Room status for ${checkInDate} not found` });
+    }
+
+    // Parse room status
+    let statusData;
     try {
-      roomStatus = JSON.parse(roomData.status); // Parse status as JSON
+      statusData = JSON.parse(roomStatus.status);
     } catch (error) {
       console.error("Error parsing room status:", error);
       return res.status(500).json({ message: "Room data is corrupted." });
     }
-    
-    // Extract available and booked rooms safely
-    const availableRooms = parseInt(roomStatus?.available || "0", 10);
-    const bookedRoomsInRoom = parseInt(roomStatus?.booked || "0", 10);
-    
-    
-    // Validate if available and booked room values are correct numbers
-    if (isNaN(availableRooms) || isNaN(bookedRoomsInRoom)) {
-      console.log("Room data is corrupted - available or booked values are not valid numbers.");
+
+    // Extract availability
+    const availableRooms = parseInt(statusData?.available || "0", 10);
+    const bookedRoomsInStatus = parseInt(statusData?.booked || "0", 10);
+
+    if (isNaN(availableRooms) || isNaN(bookedRoomsInStatus)) {
+      console.log("Room status data is corrupted.");
       return res.status(500).json({ message: "Room data is corrupted." });
     }
-    
-    // Check if there are enough available rooms to book
+
+    // Check if enough rooms are available
     if (availableRooms < bookedRooms) {
-      console.log("Not enough rooms available. Available:", availableRooms, "Requested:", bookedRooms);
       return res.status(400).json({ message: "Not enough rooms available." });
     }
-    
-    // Update room availability and booking status
-    roomStatus.available -= bookedRooms; // Subtract from available rooms
-    roomStatus.booked += bookedRooms; // Add to booked rooms
-    
-    // Convert roomStatus back to a string before saving (since it's stored as TEXT)
-    roomData.status = JSON.stringify(roomStatus);
-    
-    // Save the updated room data
-    await roomData.save();
-    console.log("Room data saved successfully after update.");
 
-    // Update the booking status to "confirmed" and set paymentStatus to "paid"
+    // Ensure booked is parsed as an integer before adding
+    statusData.booked = parseInt(statusData.booked, 10) + bookedRooms;
+    statusData.available -= bookedRooms;
+
+    // Convert back to string before saving (if necessary)
+    roomStatus.status = JSON.stringify(statusData);
+
+    // Save updated room status
+    await roomStatus.save();
+
+    // Update booking status
     bookingData.status = "confirmed";
     bookingData.paymentStatus = "paid";
-    await bookingData.save();  // Save the updated booking data
+    await bookingData.save();
 
-    // Create a new entry in the PaymentDetails table
+    // Create a new payment entry
     const newPayment = await PaymentDetails.create({
-      bookingId: bookingData.id, // Foreign key to the BookingDetails table
+      bookingId: bookingData.id,
       orderId: razorpayOrderId,
       transactionId: razorpayPaymentId,
       amount: amount / 100,
-      status: "success", // Payment status after successful verification
+      status: "success",
       paymentDate: new Date(),
       remarks: "Payment verified successfully",
     });
 
-    // Respond with success message
     res.json({
       msg: "Payment success",
       orderId: razorpayOrderId,
       paymentId: razorpayPaymentId,
-      bookingId: bookingData.booking_id,
+      bookingId: bookingData.id,
       paymentDetails: newPayment,
     });
   } catch (error) {
@@ -590,42 +602,57 @@ const orderSuccess = async (req, res) => {
 };
 
 const getUserByEmail = async (req, res) => {
-    try {
-        let { name, email, idProof } = req.body; // Assuming email is passed in the request body
-        let modal = false;
+  try {
+    let { name, email, idProof } = req.body; // Assuming email is passed in the request body
+    let modal = false;
 
-        if (!email) {
-            return res.status(400).json({ message: 'Email is required' });
-        }
-      
-        // Case-insensitive email lookup
-        const user = await User.findOne({
-          where: { email }, // ✅ Correct usage
-          attributes: ['id', 'name', 'idProof', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'status'],
-        });
-
-        if (!user) {
-          modal= true;
-          const submittedData = req.body
-           return res.status(200).json({ message: 'User not found',submittedData,modal });
-        }
-
-        if(user.phone === null){
-          modal = true;
-        }
-
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: user.id, userName: user.name },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
-
-        return res.status(200).json({ message: 'User logged in successfully',modal, token });
-    } catch (error) {
-        console.error('Error fetching user by email:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
     }
+
+    // Case-insensitive email lookup
+    const user = await User.findOne({
+      where: { email }, // ✅ Correct usage
+      attributes: [
+        "id",
+        "name",
+        "idProof",
+        "phone",
+        "address",
+        "city",
+        "state",
+        "country",
+        "pincode",
+        "status",
+      ],
+    });
+
+    if (!user) {
+      modal = true;
+      const submittedData = req.body;
+      return res
+        .status(200)
+        .json({ message: "User not found", submittedData, modal });
+    }
+
+    if (user.phone === null) {
+      modal = true;
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, userName: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "User logged in successfully", modal, token });
+  } catch (error) {
+    console.error("Error fetching user by email:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const registerOrLoginWithGoogle = async (req, res) => {
@@ -637,15 +664,15 @@ const registerOrLoginWithGoogle = async (req, res) => {
       return res.status(400).json({ message: "Email and phone are required" });
     }
 
-// Check if user exists with the given email
+    // Check if user exists with the given email
     let user = await User.findOne({ where: { phone } });
     console.log("User found with phone:", user);
 
     if (user) {
-       user.name = user.name || name;
-       user.email = user.email || email;
-       user.idProof = user.idProof || idProof;
-       await user.save();
+      user.name = user.name || name;
+      user.email = user.email || email;
+      user.idProof = user.idProof || idProof;
+      await user.save();
     }
 
     if (!user) {
@@ -669,7 +696,6 @@ const registerOrLoginWithGoogle = async (req, res) => {
   }
 };
 
-
 module.exports = {
   sendOtp,
   verifyOtp,
@@ -678,5 +704,5 @@ module.exports = {
   order,
   orderSuccess,
   getUserByEmail,
-  registerOrLoginWithGoogle
+  registerOrLoginWithGoogle,
 };

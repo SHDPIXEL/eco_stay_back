@@ -4,6 +4,7 @@ const Agent = require("../models/agent");
 // Create a new booking
 const createBooking = async (req, res) => {
   try {
+    console.log("data",req.body)
     const {
       user_Id,
       agentId,
@@ -13,7 +14,6 @@ const createBooking = async (req, res) => {
       checkOutDate,
       roomType,
       number_of_cottages,
-      selected_packages,
       selected_occupancy,
       amount,
       status = "pending", // Default value
@@ -47,7 +47,7 @@ const createBooking = async (req, res) => {
       checkOutDate,
       roomType,
       number_of_cottages,
-      selected_packages,
+      selected_packages:"No Packages Available",
       selected_occupancy,
       amount,
       status,

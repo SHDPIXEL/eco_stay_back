@@ -6,6 +6,7 @@ const BookingDetails = require("../models/booking-details");
 const Enquiry = require("../models/enquiry");
 const PaymentDetails = require("../models/payment-details");
 const User = require("../models/user");
+const RoomStatus = require('../models/roomStatus')
 const fs = require("fs");
 const path = require("path");
 const { Op } = require("sequelize");
@@ -420,7 +421,7 @@ const createRoom = async (req, res) => {
         single_new_price,
         double_new_price,
         triple_new_price,
-        status: JSON.stringify(status),
+        status,
         room_images: JSON.stringify(roomImages), // Store filenames as JSON in the database
         amenities,
       });
@@ -668,6 +669,113 @@ async function getBookingsGraph(req, res) {
   }
 }
 
+// Create availability for a room
+const createRoomStatus = async (req, res) => {
+  try {
+    console.log("Raw req.body:", req.body);
+
+    const { availability_data } = req.body;
+    if (!availability_data) {
+      return res.status(400).json({ message: "Missing availability data" });
+    }
+
+    // Parse availability_data string
+    const parsedData = JSON.parse(availability_data);
+
+    // Parse the status field again (because it's double-stringified)
+    parsedData.status = JSON.parse(parsedData.status);
+
+    const { room_id, date, status } = parsedData;
+
+    if (!room_id || !date || !status) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const room = await Rooms.findByPk(room_id);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const availability = await RoomStatus.create({
+      room_id,
+      date,
+      status: JSON.stringify(status), // Convert object to string
+    });
+
+    res.status(201).json({ message: "RoomStatus added", data: availability });
+  } catch (error) {
+    console.error("Error creating RoomStatus availability:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Get availability for a specific room
+const getRoomStatus = async (req, res) => {
+  try {
+    const availability = await RoomStatus.findAll({
+      include: [{ model: Rooms, attributes: ["room_name", "type"] }],
+    });
+
+    if (!availability.length) {
+      return res.status(404).json({ message: "No availability found for this room" });
+    }
+
+    // Convert status from string to object
+    const parsedAvailability = availability.map((item) => ({
+      ...item.toJSON(),
+      status: JSON.parse(item.status), // Parse status back into an object
+    }));
+
+    res.status(200).json(parsedAvailability);
+  } catch (error) {
+    console.error("Error fetching room availability:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+// Update availability status
+const updateRoomStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const availability = await RoomAvailability.findByPk(id);
+    if (!availability) {
+      return res.status(404).json({ message: "Availability entry not found" });
+    }
+
+    // If the user doesn't provide a new status, keep the existing one
+    const updatedStatus = status || availability.status;
+
+    await availability.update({ status: updatedStatus });
+
+    res.status(200).json({ message: "Availability updated successfully", data: availability });
+  } catch (error) {
+    console.error("Error updating room availability:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+// Delete availability entry
+const deleteRoomStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const availability = await RoomStatus.findByPk(id);
+    if (!availability) {
+      return res.status(404).json({ message: "Availability entry not found" });
+    }
+
+    await availability.destroy();
+    res.status(200).json({ message: "Room availability deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting room availability:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createAgent,
   getAgents,
@@ -691,4 +799,8 @@ module.exports = {
   getAllPayments,
   getUsers,
   getBookingsGraph,
+  createRoomStatus,
+  getRoomStatus,
+  updateRoomStatus,
+  deleteRoomStatus
 };

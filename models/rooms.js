@@ -98,8 +98,9 @@ const Rooms = sequelize.define(
       },
     },
     status: {
-      type: DataTypes.TEXT,
+      type: DataTypes.ENUM("Active", "Inactive"),
       allowNull: false,
+      defaultValue: "Inactive",
     },
     room_images: {
       type: DataTypes.JSON,

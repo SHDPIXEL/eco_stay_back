@@ -22,7 +22,11 @@ const {
   getAllEnquiries,
   getAllPayments,
   getUsers,
-  getBookingsGraph
+  getBookingsGraph,
+  createRoomStatus,
+  getRoomStatus,
+  updateRoomStatus,
+  deleteRoomStatus
 } = require("../controllers/adminController");
 
 
@@ -49,5 +53,9 @@ router.get("/enquiry",getAllEnquiries);
 router.get("/payment",getAllPayments);
 router.get("/user",getUsers);
 router.get("/booking-details/graph",getBookingsGraph);
+router.post("/createRoomStatus",createRoomStatus)
+router.get("/getRoomStatus",getRoomStatus)
+router.put("/updateRoomStatus/:id",updateRoomStatus)
+router.delete("/deleteRoomStatus/:id",deleteRoomStatus)
 
 module.exports = router;

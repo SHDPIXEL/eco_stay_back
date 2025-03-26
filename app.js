@@ -1,7 +1,9 @@
 require("dotenv").config(); // Load environment variables
 const express = require("express");
 const cors = require("cors");  // Import CORS middleware
+const path = require('path')
 require("./connection");
+require('./models/roomStatus')
 
 const PORT = process.env.PORT || 3000; // Use a fallback port if PORT is undefined
 
@@ -39,6 +41,16 @@ app.get("/", (req, res) => {
       message: "Not allowed"
   });
 });
+
+// Serve static files from the "assets" folder
+app.use('/assets', (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin"); // 👈 Allow cross-origin requests
+  next();
+}, express.static(path.join(__dirname, 'assets')));
 
 // Admin routes
 app.use("/api/auth", authRouteradmin);
