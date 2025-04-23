@@ -92,6 +92,10 @@ const BookingDetails = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: false,
     },
+    nightly_breakup: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
     selected_packages: {
       type: DataTypes.STRING,
       allowNull: false,

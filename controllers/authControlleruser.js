@@ -11,6 +11,7 @@ const RoomStatus = require("../models/roomStatus");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const upload = require("../middleware/uploadmiddleware");
+const { Op } = require("sequelize");
 
 // Mock in-memory storage for OTPs (use a database or caching system like Redis for production)
 const otpStore = {};
@@ -377,6 +378,8 @@ const order = async (req, res) => {
 
     let customerName, customerPhone, agent_Id;
 
+    console.log("reqbody",req.body);
+
     const {
       amt,
       checkInDate,
@@ -391,6 +394,7 @@ const order = async (req, res) => {
       state,
       country,
       address,
+      nightly_breakup
     } = req.body;
 
     if (userId) {
@@ -421,19 +425,17 @@ const order = async (req, res) => {
       !number_of_cottages ||
       !selected_occupancy
     ) {
-      return res
-        .status(400)
-        .json({
-          message: "Missing required booking details",
-          customerName,
-          customerPhone,
-          checkInDate,
-          checkOutDate,
-          roomType,
-          number_of_cottages,
-          selected_packages,
-          selected_occupancy,
-        });
+      return res.status(400).json({
+        message: "Missing required booking details",
+        customerName,
+        customerPhone,
+        checkInDate,
+        checkOutDate,
+        roomType,
+        number_of_cottages,
+        selected_packages,
+        selected_occupancy,
+      });
     }
 
     const instance = new Razorpay({
@@ -471,6 +473,7 @@ const order = async (req, res) => {
       pincode,
       amount: JSON.parse(amt),
       paymentStatus: "pending", // Default to pending
+      nightly_breakup, // Store nightly_breakup directly as passed from frontend
     });
 
     res.status(201).json({
@@ -696,6 +699,61 @@ const registerOrLoginWithGoogle = async (req, res) => {
   }
 };
 
+const checkRoomAvailability = async (req, res) => {
+  try {
+    console.log("req body", req.body);
+    const { roomId, checkInDate, checkOutDate, requiredCount } = req.body;
+
+    const dates = [];
+    let currentDate = new Date(checkInDate);
+    const endDate = new Date(checkOutDate);
+
+    while (currentDate <= endDate) {
+      dates.push(currentDate.toISOString().split("T")[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const statuses = await RoomStatus.findAll({
+      where: {
+        room_id: roomId,
+        date: {
+          [Op.in]: dates,
+        },
+      },
+    });
+
+    const unavailableDates = [];
+
+    for (const date of dates) {
+      const record = statuses.find((s) => s.date === date);
+      if (record) {
+        let statusData = record.status;
+        if (typeof statusData === "string") {
+          statusData = JSON.parse(statusData);
+        }
+        const available = parseInt(statusData.available || 0); // fixed here
+        console.log(`Date: ${date}, Available: ${available}`);
+        if (available < requiredCount) {
+          unavailableDates.push({ date, available });
+        }
+      } else {
+        unavailableDates.push({ date, available: 0 });
+      }
+    }
+
+    console.log("dates", unavailableDates);
+
+    if (unavailableDates.length > 0) {
+      return res.json({ success: false, unavailableDates });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   sendOtp,
   verifyOtp,
@@ -705,4 +763,5 @@ module.exports = {
   orderSuccess,
   getUserByEmail,
   registerOrLoginWithGoogle,
+  checkRoomAvailability,
 };
