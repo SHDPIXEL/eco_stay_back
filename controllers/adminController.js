@@ -6,7 +6,7 @@ const BookingDetails = require("../models/booking-details");
 const Enquiry = require("../models/enquiry");
 const PaymentDetails = require("../models/payment-details");
 const User = require("../models/user");
-const RoomStatus = require('../models/roomStatus')
+const RoomStatus = require("../models/roomStatus");
 const fs = require("fs");
 const path = require("path");
 const { Op } = require("sequelize");
@@ -26,8 +26,19 @@ const createAgent = async (req, res) => {
       }
 
       // Destructure required fields from req.body
-      const { name, email, phone, address, city, state, country, pincode, status, offers, password } =
-        req.body;
+      const {
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        country,
+        pincode,
+        status,
+        offers,
+        password,
+      } = req.body;
 
       // Ensure all required fields are provided
       if (
@@ -123,8 +134,19 @@ const updateAgentbyId = async (req, res) => {
       const { id } = req.params;
 
       // Get new data from the request body
-      const { name, email, phone, address,city,state,country,pincode, status, offers, password } =
-        req.body;
+      const {
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        country,
+        pincode,
+        status,
+        offers,
+        password,
+      } = req.body;
 
       // Get the uploaded file for ID proof
       const idProof = req.file ? req.file.filename : null;
@@ -193,7 +215,12 @@ const deleteAgent = async (req, res) => {
     if (agent) {
       // Check if the agent has an associated idProof
       if (agent.idProof) {
-        const filePath = path.join(__dirname, "..", "uploads", JSON.parse(agent.idProof)); // Adjust the path as per your directory structure
+        const filePath = path.join(
+          __dirname,
+          "..",
+          "uploads",
+          JSON.parse(agent.idProof)
+        ); // Adjust the path as per your directory structure
 
         // Delete the file if it exists
         fs.unlink(filePath, (err) => {
@@ -207,7 +234,9 @@ const deleteAgent = async (req, res) => {
       // Delete the agent from the database
       await agent.destroy();
 
-      res.status(200).json({ message: "Agent and associated ID proof deleted successfully" });
+      res.status(200).json({
+        message: "Agent and associated ID proof deleted successfully",
+      });
     } else {
       res.status(404).json({ message: "Agent not found" });
     }
@@ -405,7 +434,7 @@ const createRoom = async (req, res) => {
         status,
         amenities,
       } = roomData;
-      console.log(roomData)
+      console.log(roomData);
 
       //return res.status(401).json({ message: "test" });
       // Create a new room record
@@ -456,7 +485,6 @@ const getAllRooms = async (req, res) => {
   }
 };
 
-
 // Get room by ID
 const getRoomById = async (req, res) => {
   try {
@@ -476,12 +504,10 @@ const updateRoom = async (req, res) => {
   try {
     // Use middleware for handling file upload
     upload.array("room_images", 4)(req, res, async (err) => {
-      // Handle file upload errors
       if (err) {
         return res.status(400).json({ error: err.message });
       }
 
-      // Find the room by ID
       const room = await Rooms.findByPk(req.params.id);
       if (!room) {
         return res.status(404).json({ message: "Room not found" });
@@ -489,11 +515,11 @@ const updateRoom = async (req, res) => {
 
       const newImages = req.files ? req.files.map((file) => file.filename) : [];
       const updatedRoomImages =
-        newImages.length > 0
-          ? JSON.stringify(newImages) // Use new images if uploaded
-          : room.room_images;
+        newImages.length > 0 ? JSON.stringify(newImages) : room.room_images;
 
       let responseBody;
+
+      console.log("req body rooms", req.body);
 
       if (typeof req.body.room_data === "string") {
         responseBody = JSON.parse(req.body.room_data);
@@ -503,7 +529,6 @@ const updateRoom = async (req, res) => {
         throw new Error("Invalid room_data format");
       }
 
-      // Destructure other fields from req.body
       const {
         package_ids,
         room_name,
@@ -520,29 +545,33 @@ const updateRoom = async (req, res) => {
         amenities,
       } = responseBody;
 
-      // Update room details
-      room.package_ids = package_ids || room.package_ids;
-      room.room_name = room_name || room.room_name;
-      room.description = description || room.description;
-      room.type = type || room.type;
-      room.capacity = capacity || room.capacity;
-      room.single_base_price = single_base_price || room.single_base_price;
-      room.double_base_price = double_base_price || room.double_base_price;
-      room.triple_base_price = triple_base_price || room.triple_base_price;
-      room.single_new_price = single_new_price || room.single_new_price;
-      room.double_new_price = double_new_price || room.double_new_price;
-      room.triple_new_price = triple_new_price || room.triple_new_price;
-      room.status = status || room.status;
-      room.room_images = updatedRoomImages; // Update with new or existing images
-      room.amenities = amenities || room.amenities;
+      if (package_ids !== undefined) room.package_ids = package_ids;
+      if (room_name !== undefined) room.room_name = room_name;
+      if (description !== undefined) room.description = description;
+      if (type !== undefined) room.type = type;
+      if (capacity !== undefined) room.capacity = capacity;
+      if (single_base_price !== undefined)
+        room.single_base_price = single_base_price;
+      if (double_base_price !== undefined)
+        room.double_base_price = double_base_price;
+      if (triple_base_price !== undefined)
+        room.triple_base_price = triple_base_price;
+      if (single_new_price !== undefined)
+        room.single_new_price = single_new_price;
+      if (double_new_price !== undefined)
+        room.double_new_price = double_new_price;
+      if (triple_new_price !== undefined)
+        room.triple_new_price = triple_new_price;
+      if (status !== undefined) room.status = status;
+      if (amenities !== undefined) room.amenities = amenities;
+      room.room_images = updatedRoomImages;
 
-      console.log(room);
-      // Save the updated room
+      console.log("Updated Room", room);
+
       await room.save();
       res.status(200).json({ message: "Room updated successfully" });
     });
   } catch (error) {
-    // Handle any other errors
     res.status(500).json({ error: error.message });
   }
 };
@@ -573,7 +602,9 @@ const deleteRoom = async (req, res) => {
       // Delete the room from the database
       await room.destroy();
 
-      res.status(200).json({ message: "Room and associated images deleted successfully" });
+      res
+        .status(200)
+        .json({ message: "Room and associated images deleted successfully" });
     } else {
       res.status(404).json({ message: "Room not found" });
     }
@@ -717,7 +748,9 @@ const getRoomStatus = async (req, res) => {
     });
 
     if (!availability.length) {
-      return res.status(404).json({ message: "No availability found for this room" });
+      return res
+        .status(404)
+        .json({ message: "No availability found for this room" });
     }
 
     // Convert status from string to object
@@ -732,7 +765,6 @@ const getRoomStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // Update availability status
 const updateRoomStatus = async (req, res) => {
@@ -750,13 +782,15 @@ const updateRoomStatus = async (req, res) => {
 
     await availability.update({ status: updatedStatus });
 
-    res.status(200).json({ message: "Availability updated successfully", data: availability });
+    res.status(200).json({
+      message: "Availability updated successfully",
+      data: availability,
+    });
   } catch (error) {
     console.error("Error updating room availability:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // Delete availability entry
 const deleteRoomStatus = async (req, res) => {
@@ -802,5 +836,5 @@ module.exports = {
   createRoomStatus,
   getRoomStatus,
   updateRoomStatus,
-  deleteRoomStatus
+  deleteRoomStatus,
 };
