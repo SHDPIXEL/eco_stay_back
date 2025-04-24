@@ -5,8 +5,8 @@ const {Sequelize} = require('sequelize');
 //     dialect: 'mysql'
 // });
 
-const sequelize = new Sequelize('vrukksh','admin_ecostay','dMIlXvL^Y$Znts_eco',{
-    host: 'eco-stay-database.ch26co64cgxa.ap-south-1.rds.amazonaws.com',
+const sequelize = new Sequelize('eco_stay_db','eco_db_user','Eco_Starng!PS009',{
+    host: 'localhost',
     dialect: 'mysql'
 });
 
