@@ -14,6 +14,10 @@ if (PORT === 3000) {
 
 const app = express();
 
+// Middleware to parse JSON
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "0mb" }));
+
 // Use CORS middleware for all routes
 app.use(cors());  // Enable CORS for all routes
 
