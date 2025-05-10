@@ -50,44 +50,47 @@ async function login(req, res) {
 
 const getAgentDetails = async (req, res) => {
   try {
-    // Extract token from the Authorization header
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
       return res.status(403).json({ error: "Token is required" });
     }
 
-    // Verify the token using the secret key stored in .env
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(401).json({ error: "Invalid or expired token" });
       }
 
-      // Extract agent ID and isAgent from the decoded token
       const agentId = decoded.agentId;
       const isAgent = decoded.isAgent;
 
-      console.log(decoded);
-
-      // Find agent details by primary key (assuming agentId is the agent's primary key)
       const agent = await Agent.findByPk(agentId);
 
       if (!agent) {
         return res.status(404).json({ error: "Agent not found" });
       }
 
-      // Embed the `isAgent` field within the agent details
-      const agentDetails = {
-        ...agent.toJSON(), // Convert Sequelize instance to a plain object
-        isAgent,
-      };
+      const agentData = agent.toJSON();
 
-      // Return agent details
-      res.status(200).json(agentDetails);
+      // ✅ Parse offers if it's a string
+      if (agentData.offers && typeof agentData.offers === "string") {
+        try {
+          agentData.offers = JSON.parse(agentData.offers);
+        } catch (parseErr) {
+          console.warn("Failed to parse offers:", agentData.offers);
+          agentData.offers = [];
+        }
+      }
+
+      // Add isAgent
+      agentData.isAgent = isAgent;
+
+      res.status(200).json(agentData);
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 module.exports = { login, getAgentDetails };
