@@ -182,7 +182,7 @@ const updateAgentbyId = async (req, res) => {
         }
 
         agent.status = status || agent.status;
-        agent.offers = offers || agent.offers;
+        agent.offers = offers ? JSON.parse(offers) : agent.offers;
 
         // If a new password is provided, hash it and update
         if (password) {
@@ -203,7 +203,10 @@ const updateAgentbyId = async (req, res) => {
             phone: agent.phone,
             address: agent.address,
             status: agent.status,
-            offers: agent.offers,
+            offers:
+              typeof agent.offers === "string"
+                ? JSON.parse(agent.offers)
+                : agent.offers,
           },
         });
       } else {
