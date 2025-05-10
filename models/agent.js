@@ -107,7 +107,7 @@ const Agent = sequelize.define(
       defaultValue: "Inactive",
     },
     offers: {
-      type: DataTypes.STRING, // For storing structured data like lists or objects
+      type: DataTypes.JSON, // For storing structured data like lists or objects
       allowNull: true,
     },
   },

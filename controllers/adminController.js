@@ -75,6 +75,17 @@ const createAgent = async (req, res) => {
       // Process uploaded file for ID proof
       const idProof = req.file ? req.file.filename : null;
 
+      // Parse `offers` JSON string to array
+      let offersArray;
+      try {
+        offersArray = JSON.parse(offers);
+        if (!Array.isArray(offersArray)) {
+          throw new Error("Offers must be an array of strings");
+        }
+      } catch (e) {
+        return res.status(400).json({ error: "Invalid format for offers" });
+      }
+
       // Create a new agent record
       const newAgent = await Agent.create({
         name,
@@ -87,7 +98,7 @@ const createAgent = async (req, res) => {
         pincode,
         idProof: JSON.stringify(idProof),
         status,
-        offers,
+        offers: offersArray, // Save offers as JSON string
         password: hashedPassword, // Save hashed password
       });
 
